@@ -1,5 +1,7 @@
 #include "kernels.h"
 
+
+
 arm_status outer_fp32_6x6(
   const arm_matrix_instance_f32 * pSrcA,
   const arm_matrix_instance_f32 * pSrcB,

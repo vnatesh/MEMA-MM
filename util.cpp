@@ -69,6 +69,78 @@ bool f32_gemm_checker(float* C, float* C_check, int N, int M, int K) {
 
 
 
+bool q15_gemm_checker(int16_t* C, int16_t* C_check, int N, int M, int K) {
+
+  int CORRECT = 1;
+  int cnt = 0;
+  int ind1 = 0;
+
+  for(int m = 0; m < M; m++) {
+      for(int n = 0; n < N; n++) {
+          if(C[ind1] != C_check[ind1]) {
+              cnt++;
+              CORRECT = 0;
+          }
+
+          if(CHECK_PRINT) printf("%d\t%d\n", C_check[ind1], C[ind1]);
+          ind1++; 
+        }
+    }
+
+  if(CORRECT) {
+    Serial.println("CORRECT!");
+    return 0;
+  } else {
+    Serial.println("WRONG!");
+    // Serial.println("%d\n", cnt);
+    return 1;
+  }
+
+
+}
+
+
+
+void print_mat_q15(arm_matrix_instance_q15* mat, int rows, int cols) {
+
+  char buffer[100];
+
+  for(int i = 0; i < rows; i++) {
+    for(int j = 0; j < cols; j++) {
+      sprintf(buffer, "%hi ", mat->pData[i*cols + j]);
+      Serial.print(buffer);
+    }
+    Serial.println("");
+  }
+  Serial.println("");
+
+}
+
+
+void rand_init_q15(int16_t* mat, int r, int c) {
+    // int MAX = 65536;
+  // char buffer[100];
+    for(int i = 0; i < r*c; i++) {
+        // mat[i] = (double) i;
+        // mat[i] = 1.0;
+        // mat[i] =  (double) (i%MAX);
+      // sprintf(buffer, "%d ",((rand() % 255) - 128));
+      // Serial.print(buffer);
+        mat[i] =  ((int16_t) (((rand() % 255) - 128))) << 4;
+        // mat[i] =  ((int16_t) (((rand() % 255) - 128)));
+
+        // mat[i] =  ((int16_t) (((rand() % 255) - 128) )) & 0x0000FFFF;
+
+        // int x = ((rand() % RAND_MAX ) - (1  << 30)) & 0x0000FFFF;
+        // int16_t a = (x  >> 24) & 0x0000FFFF;
+        // mat[i] = a;
+
+
+    }   
+}
+
+
+
 void sram_bw_prof() {
 
   unsigned long start1, end1, diff;
