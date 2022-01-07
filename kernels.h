@@ -32,7 +32,7 @@ arm_status inner_fp32_1x8x1(
   const arm_matrix_instance_f32 * pSrcB,
         arm_matrix_instance_f32 * pDst);
 
-arm_status inner_fp32_1x20x1(
+arm_status inner_fp32_1x16x1(
   const arm_matrix_instance_f32 * pSrcA,
   const arm_matrix_instance_f32 * pSrcB,
         arm_matrix_instance_f32 * pDst);

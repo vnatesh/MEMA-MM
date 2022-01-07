@@ -516,7 +516,7 @@ arm_status inner_fp32_1x8x1(
 
 
 
-arm_status inner_fp32_1x20x1(
+arm_status inner_fp32_1x16x1(
   const arm_matrix_instance_f32 * pSrcA,
   const arm_matrix_instance_f32 * pSrcB,
         arm_matrix_instance_f32 * pDst)
@@ -554,7 +554,7 @@ arm_status inner_fp32_1x20x1(
 
 
       /* Loop unrolling: Compute 8 MACs at a time. */
-      k = K / 20;
+      k = K >> 4;
 
       /* matrix multiplication */
       while (k > 0U)
@@ -610,23 +610,12 @@ arm_status inner_fp32_1x20x1(
         sum += *A++ * *B;
         B += N;
 
-        sum += *A++ * *B;
-        B += N;
-
-        sum += *A++ * *B;
-        B += N;
-
-        sum += *A++ * *B;
-        B += N;
-
-        sum += *A++ * *B;
-        B += N;
         /* Decrement loop counter */
         k--;
       }
 
       /* Loop unrolling: Compute remaining MACs */
-      k = K % 20U;
+      k = K % 16U;
 
 
       while (k > 0U)
