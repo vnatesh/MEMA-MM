@@ -1,7 +1,7 @@
 #include "kernels.h"
 
 
-arm_status inner_2x4x2(
+arm_status inner_fp32_2x4x2(
   const arm_matrix_instance_f32 * pSrcA,
   const arm_matrix_instance_f32 * pSrcB,
         arm_matrix_instance_f32 * pDst)
@@ -170,7 +170,7 @@ arm_status inner_2x4x2(
 
 
 
-arm_status inner_2x8x2(
+arm_status inner_fp32_2x8x2(
   const arm_matrix_instance_f32 * pSrcA,
   const arm_matrix_instance_f32 * pSrcB,
         arm_matrix_instance_f32 * pDst)
@@ -398,7 +398,7 @@ arm_status inner_2x8x2(
 
 
 
-arm_status inner_1x8x1(
+arm_status inner_fp32_1x8x1(
   const arm_matrix_instance_f32 * pSrcA,
   const arm_matrix_instance_f32 * pSrcB,
         arm_matrix_instance_f32 * pDst)
@@ -516,7 +516,7 @@ arm_status inner_1x8x1(
 
 
 
-arm_status inner_1x20x1(
+arm_status inner_fp32_1x20x1(
   const arm_matrix_instance_f32 * pSrcA,
   const arm_matrix_instance_f32 * pSrcB,
         arm_matrix_instance_f32 * pDst)
@@ -848,7 +848,7 @@ arm_status test1_arr(
 
 
 
-arm_status inner_1x4x1(
+arm_status inner_fp32_1x4x1(
   const arm_matrix_instance_f32 * pSrcA,
   const arm_matrix_instance_f32 * pSrcB,
         arm_matrix_instance_f32 * pDst)

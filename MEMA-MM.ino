@@ -87,11 +87,11 @@ void print_memory_info() {
 
   start1 = micros();
 
-  status = inner_1x4x1(&A, &B, &C);
+  status = inner_fp32_1x4x1(&A, &B, &C);
 
   end1 = micros();
   diff = end1 - start1;
-  Serial.print("sgemm inner_1x4x1 time: "); 
+  Serial.print("sgemm inner_fp32_1x4x1 time: "); 
   Serial.println(diff); //prints time since program started
 
 
@@ -102,11 +102,11 @@ void print_memory_info() {
 
   start1 = micros();
 
-  status = inner_1x8x1(&A, &B, &C);
+  status = inner_fp32_1x8x1(&A, &B, &C);
 
   end1 = micros();
   diff = end1 - start1;
-  Serial.print("sgemm inner_1x8x1 time: "); 
+  Serial.print("sgemm inner_fp32_1x8x1 time: "); 
   Serial.println(diff); //prints time since program started
 
   f32_gemm_checker(C.pData, C_ref.pData, N, M, K);
@@ -138,11 +138,11 @@ void print_memory_info() {
 
   start1 = micros();
 
-  status = inner_2x4x2(&A, &B, &C);
+  status = inner_fp32_2x4x2(&A, &B, &C);
 
   end1 = micros();
   diff = end1 - start1;
-  Serial.print("sgemm inner_2x4x2 time: "); 
+  Serial.print("sgemm inner_fp32_2x4x2 time: "); 
   Serial.println(diff); //prints time since program started
 
   f32_gemm_checker(C.pData, C_ref.pData, N, M, K);
@@ -156,112 +156,112 @@ void print_memory_info() {
 
   start1 = micros();
 
-  status = inner_2x8x2(&A, &B, &C);
+  status = inner_fp32_2x8x2(&A, &B, &C);
 
   end1 = micros();
   diff = end1 - start1;
-  Serial.print("sgemm inner_2x8x2 time: "); 
-  Serial.println(diff); //prints time since program started
-
-  f32_gemm_checker(C.pData, C_ref.pData, N, M, K);
-  // print_mat(&C, M, N);
-
-
-
-  free(C_f32);
-  C_f32 = (float *) calloc( M*N, sizeof( float ));
-  arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
-  
-  start1 = micros();
-
-  status = outer_2x2(&A, &B, &C);
-
-  end1 = micros();
-  diff = end1 - start1;
-  Serial.print("sgemm outer_2x2 time: "); 
-  Serial.println(diff); //prints time since program started
-
-
-
-  free(C_f32);
-  C_f32 = (float *) calloc( M*N, sizeof( float ));
-  arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
-  
-  start1 = micros();
-
-  status = outer_2x2_unpacked(&A, &B, &C);
-
-  end1 = micros();
-  diff = end1 - start1;
-  Serial.print("sgemm outer_2x2_unpacked time: "); 
-  Serial.println(diff); //prints time since program started
-
-
-
-
-  free(C_f32);
-  C_f32 = (float *) calloc( M*N, sizeof( float ));
-  arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
-  
-  start1 = micros();
-
-  // status = outer_3x3(&A, &B, &C);
-
-  end1 = micros();
-  diff = end1 - start1;
-  Serial.print("sgemm outer_3x3 time: "); 
-  Serial.println(diff); //prints time since program started
-
-
-
-
-  free(C_f32);
-  C_f32 = (float *) calloc( M*N, sizeof( float ));
-  arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
-  
-  start1 = micros();
-
-  status = outer_4x4(&A, &B, &C);
-
-  end1 = micros();
-  diff = end1 - start1;
-  Serial.print("sgemm outer_4x4 time: "); 
-  Serial.println(diff); //prints time since program started
-
-
-
-
-  free(C_f32);
-  C_f32 = (float *) calloc( M*N, sizeof( float ));
-  arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
-  
-  start1 = micros();
-
-  status = outer_5x5(&A, &B, &C);
-
-  end1 = micros();
-  diff = end1 - start1;
-  Serial.print("sgemm outer_5x5 time: "); 
-  Serial.println(diff); //prints time since program started
-
-
-
-
-  free(C_f32);
-  C_f32 = (float *) calloc( M*N, sizeof( float ));
-  arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
-
-  start1 = micros();
-
-  status = outer_5x5_unpacked(&A, &B, &C);
-
-  end1 = micros();
-  diff = end1 - start1;
-  Serial.print("sgemm outer_5x5_unpacked time: "); 
+  Serial.print("sgemm inner_fp32_2x8x2 time: "); 
   Serial.println(diff); //prints time since program started
 
   f32_gemm_checker(C.pData, C_ref.pData, N, M, K);
   // print_mat(&C, M, N);
+
+
+
+  free(C_f32);
+  C_f32 = (float *) calloc( M*N, sizeof( float ));
+  arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
+  
+  start1 = micros();
+
+  status = outer_fp32_2x2_packed(&A, &B, &C);
+
+  end1 = micros();
+  diff = end1 - start1;
+  Serial.print("sgemm outer_fp32_2x2_packed time: "); 
+  Serial.println(diff); //prints time since program started
+
+
+
+  free(C_f32);
+  C_f32 = (float *) calloc( M*N, sizeof( float ));
+  arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
+  
+  start1 = micros();
+
+  status = outer_fp32_2x2(&A, &B, &C);
+
+  end1 = micros();
+  diff = end1 - start1;
+  Serial.print("sgemm outer_fp32_2x2 time: "); 
+  Serial.println(diff); //prints time since program started
+
+
+
+
+  free(C_f32);
+  C_f32 = (float *) calloc( M*N, sizeof( float ));
+  arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
+  
+  start1 = micros();
+
+  // status = outer_fp32_3x3(&A, &B, &C);
+
+  end1 = micros();
+  diff = end1 - start1;
+  Serial.print("sgemm outer_fp32_3x3 time: "); 
+  Serial.println(diff); //prints time since program started
+
+
+
+
+  free(C_f32);
+  C_f32 = (float *) calloc( M*N, sizeof( float ));
+  arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
+  
+  start1 = micros();
+
+  status = outer_fp32_4x4(&A, &B, &C);
+
+  end1 = micros();
+  diff = end1 - start1;
+  Serial.print("sgemm outer_fp32_4x4 time: "); 
+  Serial.println(diff); //prints time since program started
+
+
+
+
+  free(C_f32);
+  C_f32 = (float *) calloc( M*N, sizeof( float ));
+  arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
+  
+  start1 = micros();
+
+  status = outer_fp32_5x5_packed(&A, &B, &C);
+
+  end1 = micros();
+  diff = end1 - start1;
+  Serial.print("sgemm outer_fp32_5x5_packed time: "); 
+  Serial.println(diff); //prints time since program started
+
+
+
+
+  free(C_f32);
+  C_f32 = (float *) calloc( M*N, sizeof( float ));
+  arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
+
+  start1 = micros();
+
+  status = outer_fp32_5x5_old(&A, &B, &C);
+
+  end1 = micros();
+  diff = end1 - start1;
+  Serial.print("sgemm outer_fp32_5x5_old time: "); 
+  Serial.println(diff); //prints time since program started
+
+  f32_gemm_checker(C.pData, C_ref.pData, N, M, K);
+  // print_mat(&C, M, N);
   
 
 
@@ -273,11 +273,11 @@ void print_memory_info() {
 
   start1 = micros();
 
-  status = outer_5x5_ptr(&A, &B, &C);
+  status = outer_fp32_5x5(&A, &B, &C);
 
   end1 = micros();
   diff = end1 - start1;
-  Serial.print("sgemm outer_5x5_ptr time: "); 
+  Serial.print("sgemm outer_fp32_5x5 time: "); 
   Serial.println(diff); //prints time since program started
 
   f32_gemm_checker(C.pData, C_ref.pData, N, M, K);
