@@ -20,7 +20,8 @@ void print_mat_q15(arm_matrix_instance_q15* mat, int rows, int cols);
 bool q15_gemm_checker(int16_t* C, int16_t* C_check, int N, int M, int K) ;
 bool f32_gemm_checker(float* C, float* C_check, int N, int M, int K) ;
 void sram_bw_prof() ;
-
+void arm_vs_mema_fp32();
+void arm_vs_mema_q15();
 
 arm_status inner_fp32_1x4x1(
   const arm_matrix_instance_f32 * pSrcA,
