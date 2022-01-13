@@ -739,6 +739,327 @@ void arm_vs_mema_fp32() {
 
 
 
+
+
+
+
+void power_inner_fp32() {
+
+
+  arm_matrix_instance_f32 A;      /* Matrix A Instance */
+  arm_matrix_instance_f32 B;     /* Matrix B(A transpose) instance */
+  arm_matrix_instance_f32 C;   /* Matrix C( B multiply with A) instance */
+
+  arm_status status;
+
+  float *A_f32, *B_f32, *C_f32;
+  
+  for(uint32_t j = 10; j <= 50; j+=10) {
+
+    uint32_t M = j, N = j, K = j;
+    char buf[100];
+  
+    A_f32 = (float *) malloc( M*K*sizeof( float ));
+    B_f32 = (float *) malloc( K*N*sizeof( float ));
+    C_f32 = (float *) calloc( M*N, sizeof( float ));
+  
+    // gettimeofday (&start, NULL);
+    srand(time(NULL));
+    rand_init(A_f32, M, K);
+    rand_init(B_f32, K, N);
+  
+    arm_mat_init_f32(&A, M, K, (float32_t *) A_f32);
+    arm_mat_init_f32(&B, K, N, (float32_t *) B_f32);
+    arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
+
+    int iters = 1000;
+    for(int i = 0; i < iters; i++) {
+      status = inner_fp32_2x8x2(&A, &B, &C);
+    }
+  
+    free(A_f32);
+    free(B_f32);
+    free(C_f32);
+
+    delay(1000);
+  }
+
+
+ for(uint32_t j = 60; j <= 110; j+=10) {
+
+    uint32_t M = j, N = j, K = j;
+    char buf[100];
+  
+    A_f32 = (float *) malloc( M*K*sizeof( float ));
+    B_f32 = (float *) malloc( K*N*sizeof( float ));
+    C_f32 = (float *) calloc( M*N, sizeof( float ));
+  
+    // gettimeofday (&start, NULL);
+    srand(time(NULL));
+    rand_init(A_f32, M, K);
+    rand_init(B_f32, K, N);
+  
+    arm_mat_init_f32(&A, M, K, (float32_t *) A_f32);
+    arm_mat_init_f32(&B, K, N, (float32_t *) B_f32);
+    arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
+
+    int iters = 500;
+    for(int i = 0; i < iters; i++) {
+      status = inner_fp32_2x8x2(&A, &B, &C);
+    }
+  
+    free(A_f32);
+    free(B_f32);
+    free(C_f32);
+
+    delay(1000);
+  }
+
+
+  
+}
+
+
+
+void power_outer_fp32() {
+
+
+  arm_matrix_instance_f32 A;      /* Matrix A Instance */
+  arm_matrix_instance_f32 B;     /* Matrix B(A transpose) instance */
+  arm_matrix_instance_f32 C;   /* Matrix C( B multiply with A) instance */
+
+  arm_status status;
+
+  float *A_f32, *B_f32, *C_f32;
+  
+  for(uint32_t j = 10; j <= 50; j+=10) {
+
+    uint32_t M = j, N = j, K = j;
+    char buf[100];
+  
+    A_f32 = (float *) malloc( M*K*sizeof( float ));
+    B_f32 = (float *) malloc( K*N*sizeof( float ));
+    C_f32 = (float *) calloc( M*N, sizeof( float ));
+  
+    // gettimeofday (&start, NULL);
+    srand(time(NULL));
+    rand_init(A_f32, M, K);
+    rand_init(B_f32, K, N);
+  
+    arm_mat_init_f32(&A, M, K, (float32_t *) A_f32);
+    arm_mat_init_f32(&B, K, N, (float32_t *) B_f32);
+    arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
+
+    int iters = 1000;
+    for(int i = 0; i < iters; i++) {
+      status = outer_fp32_5x5(&A, &B, &C);
+    }
+  
+    free(A_f32);
+    free(B_f32);
+    free(C_f32);
+    
+    delay(1000);
+  }
+
+
+ for(uint32_t j = 60; j <= 110; j+=10) {
+
+    uint32_t M = j, N = j, K = j;
+    char buf[100];
+  
+    A_f32 = (float *) malloc( M*K*sizeof( float ));
+    B_f32 = (float *) malloc( K*N*sizeof( float ));
+    C_f32 = (float *) calloc( M*N, sizeof( float ));
+  
+    // gettimeofday (&start, NULL);
+    srand(time(NULL));
+    rand_init(A_f32, M, K);
+    rand_init(B_f32, K, N);
+  
+    arm_mat_init_f32(&A, M, K, (float32_t *) A_f32);
+    arm_mat_init_f32(&B, K, N, (float32_t *) B_f32);
+    arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
+
+    int iters = 500;
+    for(int i = 0; i < iters; i++) {
+      status = outer_fp32_5x5(&A, &B, &C);
+    }
+  
+    free(A_f32);
+    free(B_f32);
+    free(C_f32);
+    
+    delay(1000);
+  }
+
+}
+
+
+
+
+
+
+void power_inner_q15() {
+
+  arm_matrix_instance_q15 A;      /* Matrix A Instance */
+  arm_matrix_instance_q15 B;     /* Matrix B(A transpose) instance */
+  arm_matrix_instance_q15 C;   /* Matrix C( B multiply with A) instance */
+  arm_matrix_instance_q15 C_ref;   /* Matrix C( B multiply with A) instance */
+
+  arm_status status;
+
+  int16_t *A_16, *B_16, *C_16, *B_trans;
+
+  for(uint32_t j = 8; j <= 56; j+=8) {
+
+    uint32_t M = j, N = j, K = j;
+    
+    A_16 = (int16_t *) malloc( M*K*sizeof( int16_t ));
+    B_16 = (int16_t *) malloc( K*N*sizeof( int16_t ));
+    B_trans = (int16_t *) malloc( K*N*sizeof( int16_t ));
+    C_16 = (int16_t *) calloc( M*N, sizeof( int16_t ));
+    
+    srand(time(NULL));
+    rand_init_q15(A_16, M, K);
+    rand_init_q15(B_16, K, N);
+
+    arm_mat_init_q15(&A, M, K, (q15_t *) A_16);
+    arm_mat_init_q15(&B, K, N, (q15_t *) B_16);
+    arm_mat_init_q15(&C, M, N, (q15_t *) C_16);
+
+    int iters = 1000;
+    for(int i = 0; i < iters; i++) {
+//      status = arm_mat_mult_fast_q15(&A, &B, &C, (q15_t *) B_trans);
+          status = arm_q15_inner_2x4x2(&A, &B, &C, (q15_t *) B_trans);
+    }
+
+//    status = arm_q15_inner_2x4x2(&A, &B, &C, (q15_t *) B_trans);
+
+    free(A_16);
+    free(B_16);
+    free(C_16);
+    free(B_trans);
+    
+    delay(1000);
+  }
+
+
+  for(uint32_t j = 64; j <= 111; j+=8) {
+
+    uint32_t M = j, N = j, K = j;
+    
+    A_16 = (int16_t *) malloc( M*K*sizeof( int16_t ));
+    B_16 = (int16_t *) malloc( K*N*sizeof( int16_t ));
+    B_trans = (int16_t *) malloc( K*N*sizeof( int16_t ));
+    C_16 = (int16_t *) calloc( M*N, sizeof( int16_t ));
+    
+    srand(time(NULL));
+    rand_init_q15(A_16, M, K);
+    rand_init_q15(B_16, K, N);
+
+    arm_mat_init_q15(&A, M, K, (q15_t *) A_16);
+    arm_mat_init_q15(&B, K, N, (q15_t *) B_16);
+    arm_mat_init_q15(&C, M, N, (q15_t *) C_16);
+
+    int iters = 500;
+    for(int i = 0; i < iters; i++) {
+      status = arm_mat_mult_fast_q15(&A, &B, &C, (q15_t *) B_trans);
+    }
+
+//    status = arm_q15_inner_2x4x2(&A, &B, &C, (q15_t *) B_trans);
+
+    free(A_16);
+    free(B_16);
+    free(C_16);
+    free(B_trans);
+    
+    delay(1000);
+  }
+  
+}
+
+
+
+
+void power_outer_q15() {
+
+  arm_matrix_instance_q15 A;      /* Matrix A Instance */
+  arm_matrix_instance_q15 B;     /* Matrix B(A transpose) instance */
+  arm_matrix_instance_q15 C;   /* Matrix C( B multiply with A) instance */
+  arm_matrix_instance_q15 C_ref;   /* Matrix C( B multiply with A) instance */
+
+  arm_status status;
+
+  int16_t *A_16, *B_16, *C_16, *B_trans;
+
+  for(uint32_t j = 8; j <= 56; j+=8) {
+
+    uint32_t M = j, N = j, K = j;
+    
+    A_16 = (int16_t *) malloc( M*K*sizeof( int16_t ));
+    B_16 = (int16_t *) malloc( K*N*sizeof( int16_t ));
+    B_trans = (int16_t *) malloc( K*N*sizeof( int16_t ));
+    C_16 = (int16_t *) calloc( M*N, sizeof( int16_t ));
+    
+    srand(time(NULL));
+    rand_init_q15(A_16, M, K);
+    rand_init_q15(B_16, K, N);
+
+    arm_mat_init_q15(&A, M, K, (q15_t *) A_16);
+    arm_mat_init_q15(&B, K, N, (q15_t *) B_16);
+    arm_mat_init_q15(&C, M, N, (q15_t *) C_16);
+
+    int iters = 1000;
+    for(int i = 0; i < iters; i++) {
+      status = outer_q15_4x2(&A, &B, &C, (q15_t *) B_trans);
+    }
+
+//    status = arm_q15_inner_2x4x2(&A, &B, &C, (q15_t *) B_trans);
+
+    free(A_16);
+    free(B_16);
+    free(C_16);
+    free(B_trans);
+    
+    delay(1000);
+  }
+
+
+  for(uint32_t j = 64; j <= 111; j+=8) {
+
+    uint32_t M = j, N = j, K = j;
+    
+    A_16 = (int16_t *) malloc( M*K*sizeof( int16_t ));
+    B_16 = (int16_t *) malloc( K*N*sizeof( int16_t ));
+    B_trans = (int16_t *) malloc( K*N*sizeof( int16_t ));
+    C_16 = (int16_t *) calloc( M*N, sizeof( int16_t ));
+    
+    srand(time(NULL));
+    rand_init_q15(A_16, M, K);
+    rand_init_q15(B_16, K, N);
+
+    arm_mat_init_q15(&A, M, K, (q15_t *) A_16);
+    arm_mat_init_q15(&B, K, N, (q15_t *) B_16);
+    arm_mat_init_q15(&C, M, N, (q15_t *) C_16);
+
+    int iters = 500;
+    for(int i = 0; i < iters; i++) {
+      status = outer_q15_4x2(&A, &B, &C, (q15_t *) B_trans);
+    }
+
+//    status = arm_q15_inner_2x4x2(&A, &B, &C, (q15_t *) B_trans);
+
+    free(A_16);
+    free(B_16);
+    free(C_16);
+    free(B_trans);
+    
+    delay(1000);
+  }
+  
+}
+
 void setup() {
  // put your setup code here, to run once:
 
@@ -749,9 +1070,16 @@ void loop() {
  // put your main code here, to run repeatedly:
   // print_memory_info();
   // print_memory_info1();
-  // arm_vs_mema_fp32();
-  arm_vs_mema_q15();
+//   arm_vs_mema_fp32();
+//  arm_vs_mema_q15();
   // sram_bw_prof();
+
+  delay(10000); 
+  power_inner_q15();   
+//  power_outer_q15(); 
+
+//  power_inner_fp32();
+//  power_outer_fp32();
   delay(10000); 
 
 }
