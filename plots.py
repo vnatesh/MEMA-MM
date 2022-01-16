@@ -11,6 +11,13 @@ import math
 
 
 
+#------------------- MCU Experiments-------------------------
+
+
+
+
+
+
 def plot_arm_vs_mema_fp32_tput(fname = 'arm_vs_mema_fp32_tput'):
 	plt.rcParams.update({'font.size': 16})
 	markers = ['o','v','s','d','^']
@@ -74,17 +81,18 @@ def plot_arm_vs_mema_q15_tput(fname = 'arm_vs_mema_q15_tput'):
 
 
 
-def compute_energy_peaks(fname):
+# integrate power over time (200 us interval) to get energy during MM 
+def compute_energy_peaks(fname, high, low):
 	df1 = pandas.read_csv(fname)
+	c = list(df1['USB Avg Current (mA)'])
 	p = list(df1['USB Avg Power (W)'])
-	e = list(df1['USB Avg Current (mA)'])
 	i = 0;
 	energy = []
 	while i < len(p):
-		if e[i] >= 20:
+		if c[i] >= high:
 			x = 0
 			j = 0
-			while p[i+j] >= 0.1:
+			while c[i+j] >= low:
 				# energy (J) = sum(power (W) X time (sec)) (0.0002 sec per sample)
 				x += p[i+j]*0.0002
 				j += 1
@@ -106,10 +114,10 @@ def plot_arm_vs_mema_energy(fname = 'arm_vs_mema_energy'):
 	N1 = range(10,111,10)
 	N2 = range(8,111,8)
 	#
-	out_fp32 = compute_energy_peaks('power_outer_fp32.csv')
-	in_fp32 = compute_energy_peaks('power_inner_fp32.csv')
-	out_q15 = compute_energy_peaks('power_outer_q15.csv')
-	in_q15 = compute_energy_peaks('power_inner_q15.csv')
+	out_fp32 = compute_energy_peaks('power_outer_fp32.csv', 20, 18)
+	in_fp32 = compute_energy_peaks('power_inner_fp32.csv', 20, 18)
+	out_q15 = compute_energy_peaks('power_outer_q15.csv', 20, 18)
+	in_q15 = compute_energy_peaks('power_inner_q15.csv', 20, 18)
 	#
 	for i in range(len(N1)):
 		if N1[i] <= 50:
@@ -170,6 +178,11 @@ plot_arm_vs_mema_energy(fname = 'arm_vs_mema_energy')
 
 
 
+
+
+
+#---------------------------------------------------------------------------------
+#------------------- CPU Experiments-------------------------
 
 
 
@@ -257,37 +270,13 @@ plot_cake_vs_arm_io()
 
 
 
+len(compute_energy_peaks('power_armpl.csv', 800, 550))
+len(compute_energy_peaks('power_armcl.csv', 800, 550))
+len(compute_energy_peaks('power_cake.csv', 800, 550))
 
-
-def compute_energy_peaks(fname):
-	df1 = pandas.read_csv(fname)
-	c = list(df1['USB Avg Current (mA)'])
-	p = list(df1['USB Avg Power (W)'])
-	i = 0;
-	energy = []
-	while i < len(c):
-		if c[i] >= 800:
-			x = 0
-			j = 0
-			while c[i+j] >= 550:
-				# energy (mJ) = sum(power (W) X time (sec)) (0.0002 sec per sample)
-				x += p[i+j]*0.0002
-				j += 1
-			#
-			energy.append(x * 1000.0)
-			i += j
-		else:
-			i += 1
-	#
-	return energy
-
-len(compute_energy_peaks('power_armpl.csv'))
-len(compute_energy_peaks('power_armcl.csv'))
-len(compute_energy_peaks('power_cake.csv'))
-
-compute_energy_peaks('power_armpl.csv')
-compute_energy_peaks('power_armcl.csv')
-compute_energy_peaks('power_cake.csv')
+compute_energy_peaks('power_armpl.csv', 800, 550)
+compute_energy_peaks('power_armcl.csv', 800, 550)
+compute_energy_peaks('power_cake.csv', 800, 550)
 
 def plot_cake_vs_arm_energy(fname = 'cake_vs_arm_energy'):
 	armpl = [83.81293999999994, 677.6829599999996, 2519.1247599999956, 5692.071219999987, 10828.513979999869, 19358.428860000018, 30004.140100000397, 47787.191260001084, 65019.56523999948, 88182.4322]
@@ -318,16 +307,14 @@ def plot_cake_vs_arm_energy(fname = 'cake_vs_arm_energy'):
 plot_cake_vs_arm_energy()
 
 
-years = range(2011,2021)
-
-Arm11 - 2005, 200 MB/sec, 8
-A9 (Android)- 2012 , 420 Mb/sec, 8
-A7 (rpi2)- 2015 , 1200 Mb/sec, 8
-A53 - 2016, 1500 MB/sec, 8
-A72 - 2019, 3700 MB/sec, 8
-A75 - , 14900 MB/sec, 8
-A76 - , , 16
-ARM Cortex-X1 - 2020 , 32
+# Arm11 - 2005, 200 MB/sec, 8
+# A9 (Android)- 2012 , 420 Mb/sec, 8
+# A7 (rpi2)- 2015 , 1200 Mb/sec, 8
+# A53 - 2016, 1500 MB/sec, 8
+# A72 - 2019, 3700 MB/sec, 8
+# A75 - , 14900 MB/sec, 8
+# A76 - , , 16
+# ARM Cortex-X1 - 2020 , 32
 
 
 
@@ -437,7 +424,7 @@ def plot_cake_vs_arm_cpu(M,N,K,mc,kc,alpha,fname = 'cake_vs_arm', ntrials=10):
 	dram_bw_cpu = 0; dram_bw_cake = 0; gflops_cpu = 0; gflops_cake = 0; cake_mem_acc = 0
 	gflops_cpu_arr1=[]; dram_bw_cpu_arr1=[]; dram_bw_cpu1 = 0; gflops_cpu1 = 0;
 	#
-	df1 = pandas.read_csv('results_sq')
+	df1 = pandas.read_csv('results_cake_arm')
 	single_core_time = df1[(df1['algo'] == 'cake') & (df1['p'] == 1)]['time'].mean()
 	#	
 	for i in range(len(NUM_CPUs)):
@@ -496,7 +483,7 @@ def plot_cake_vs_arm_cpu(M,N,K,mc,kc,alpha,fname = 'cake_vs_arm', ntrials=10):
 	x = np.array(list(range(3,9)))
 	y = [gflops_cpu_arr[-2] + (gflops_cpu_arr[-1] - gflops_cpu_arr[-2])*i - 0.006*i*i for i in range(4)]
 	y += 2*[y[-1]]
-	plt.plot(x, y, color = colors[4], linestyle = 'dashed', label = labels[4])
+	plt.plot(x, y, color = colors[5], linestyle = 'dashed', label = labels[4])
 	#
 	x = np.array(list(range(3,9)))
 	y = [gflops_cpu_arr1[-2] + (gflops_cpu_arr1[-1] - gflops_cpu_arr1[-2])*i - 0.006*i*i for i in range(4)]
@@ -504,7 +491,7 @@ def plot_cake_vs_arm_cpu(M,N,K,mc,kc,alpha,fname = 'cake_vs_arm', ntrials=10):
 	plt.plot(x, y, color = colors[3], linestyle = 'dashed', label = labels[6])
 	#
 	plt.plot(list(range(1,9)), [gflops_cake_arr[0]+i*(gflops_cake_arr[0]) for i in range(8)], 
-		label = labels[3], linewidth = 2, linestyle = 'dashed', color = colors[5])
+		label = labels[3], linewidth = 2, linestyle = 'dashed', color = colors[4])
 	plt.xticks(list(range(1,9)))
 	#
 	plt.plot(list(NUM_CPUs), list(gflops_cpu_arr), label = labels[1],  marker = markers[1], color = colors[5])

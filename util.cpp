@@ -141,6 +141,8 @@ void rand_init_q15(int16_t* mat, int r, int c) {
 
 
 
+// measure the bandwidth from core to SRAM 
+
 void sram_bw_prof() {
 
   unsigned long start1, end1, diff;
