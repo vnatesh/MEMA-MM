@@ -13,6 +13,37 @@ void rand_init(float* mat, int r, int c) {
 }
 
 
+// randomized sparse matrix with sparsity % of values that are zero
+// threshold pruning
+void rand_sparse(float* mat, int r, int c, float sparsity) {
+
+  for(int i = 0; i < r*c; i++) {
+    int x = rand();
+    if(x <= ((float) RAND_MAX)*sparsity) {
+      mat[i] = 0;
+    } else {
+      mat[i] =  (float) x / ((float) RAND_MAX)*2.0 - 1.0;
+    }
+  } 
+}
+
+
+void print_mat1(float* mat, int rows, int cols) {
+
+  char buffer[100];
+
+  for(int i = 0; i < rows; i++) {
+    for(int j = 0; j < cols; j++) {
+      sprintf(buffer, "%0.2f ", mat[i*cols + j]);
+      Serial.print(buffer);
+    }
+    Serial.println("");
+  }
+  Serial.println("");
+
+}
+
+
 void print_mat(arm_matrix_instance_f32* mat, int rows, int cols) {
 
   char buffer[100];
@@ -29,6 +60,28 @@ void print_mat(arm_matrix_instance_f32* mat, int rows, int cols) {
 }
 
 
+void print_arr(float* mat, int len) {
+
+  char buffer[100];
+
+  for(int i = 0; i < len; i++) {
+      sprintf(buffer, "%0.2f ", mat[i]);
+      Serial.print(buffer);
+  }
+  Serial.println("");
+}
+
+
+void print_arr_int(int* mat, int len) {
+
+  char buffer[100];
+
+  for(int i = 0; i < len; i++) {
+      sprintf(buffer, "%d ", mat[i]);
+      Serial.print(buffer);
+  }
+  Serial.println("");
+}
 
 
 
