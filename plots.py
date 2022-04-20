@@ -15,6 +15,72 @@ import math
 
 
 
+def plot_mema_fp32_sparse_levels(fname = 'plot_mema_fp32_sparse_levels'):
+	plt.rcParams.update({'font.size': 16})
+	markers = ['o','v','s','d','^']
+	colors = ['b','g','aqua','k','m','r']
+	df1 = pandas.read_csv('m4_sparsity')
+	N1 = range(60,100,5)
+	runtime_mema = [float(df1[(df1['algo'] == 'mema') \
+		& (df1['sparsity'] == i)]['time'].values[0] / (1e6)) for i in N1]
+	runtime_mema_sp = [float(df1[(df1['algo'] == 'mema_sp') \
+		& (df1['sparsity'] == i)]['time'].values[0] / (1e6)) for i in N1]
+	fig = plt.figure(figsize = (6,4))
+	plt.title('(b) FP32 Runtime of spMM for Different Sparsities', fontsize = 14)
+	plt.plot(N1, runtime_mema, 'b', label = 'mema_outer_5x5', marker = markers[4], color = colors[4])
+	plt.plot(N1, runtime_mema_sp, 'b', label = 'mema_rosko', marker = markers[4], color = colors[5])
+	plt.legend(loc = "lower left", prop={'size': 10})
+	plt.xlabel('sparsity (%)', fontsize = 16)
+	plt.ylabel('Runtime (sec)', fontsize = 14)
+	# plt.xticks(range(0,86,20),fontsize = 14)
+	plt.yticks(fontsize = 14)
+	# plt.ylim(ymin = 2e-8,ymax = 0.00012)
+	# plt.ticklabel_format(axis="y", style="sci")
+	plt.savefig("%s.pdf" % fname, bbox_inches='tight')
+	plt.show()
+	plt.clf()
+	plt.close('all')
+
+
+plot_arm_vs_mema_fp32_levels()
+
+
+
+def plot_arm_vs_mema_fp32_sparse(fname = 'arm_vs_mema_fp32_sparse'):
+	plt.rcParams.update({'font.size': 16})
+	markers = ['o','v','s','d','^']
+	colors = ['b','g','aqua','k','m','r']
+	df1 = pandas.read_csv('m4_sparse')
+	N1 = range(5,86,5)
+	N2 = range(8,86,8)
+	runtime_inner_1x16x1 = [float(df1[(df1['algo'] == 'inner_1x16x1') \
+		& (df1['M'] == i)]['time'].values[0] / (1e6)) for i in N1]
+	runtime_inner_2x8x2 = [float(df1[(df1['algo'] == 'inner_2x8x2') \
+		& (df1['M'] == i)]['time'].values[0] / (1e6)) for i in N2]
+	runtime_mema = [float(df1[(df1['algo'] == 'mema') \
+		& (df1['M'] == i)]['time'].values[0] / (1e6)) for i in N1]
+	runtime_mema_sp = [float(df1[(df1['algo'] == 'mema_sp') \
+		& (df1['M'] == i)]['time'].values[0] / (1e6)) for i in N1]
+	fig = plt.figure(figsize = (6,4))
+	plt.title('(a) FP32 Runtime of spMM on ARM MCU', fontsize = 14)
+	plt.plot(N1, runtime_mema, 'b', label = 'mema_outer_5x5', marker = markers[4], color = colors[4])
+	plt.plot(N1, runtime_mema_sp, 'b', label = 'mema_rosko', marker = markers[4], color = colors[5])
+	plt.plot(N2, runtime_inner_2x8x2, 'b', label = 'arm_inner_2x8x2', marker = markers[1], color = colors[1])
+	plt.plot(N1, runtime_inner_1x16x1, 'b', label = 'arm_inner_1x16x1', marker = markers[3], color = colors[3])
+	plt.legend(loc = "upper left", prop={'size': 10})
+	plt.xlabel('N', fontsize = 16)
+	plt.ylabel('Runtime (sec)', fontsize = 14)
+	plt.xticks(range(0,86,20),fontsize = 14)
+	plt.yticks(fontsize = 14)
+	# plt.ylim(ymin = 2e-8,ymax = 0.00012)
+	# plt.ticklabel_format(axis="y", style="sci")
+	plt.savefig("%s.pdf" % fname, bbox_inches='tight')
+	plt.show()
+	plt.clf()
+	plt.close('all')
+
+
+plot_arm_vs_mema_fp32_sparse()
 
 
 
@@ -81,7 +147,7 @@ def plot_arm_vs_mema_q15_tput(fname = 'arm_vs_mema_q15_tput'):
 
 
 
-# integrate power over time (200 us interval) to get energy during MM 
+# integrate power over time (200 us interval) to get energy (mJ) during MM 
 def compute_energy_peaks(fname, high, low):
 	df1 = pandas.read_csv(fname)
 	c = list(df1['USB Avg Current (mA)'])
