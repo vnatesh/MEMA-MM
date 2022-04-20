@@ -821,6 +821,277 @@ arm_status outer_fp32_5x5(
 
 
 
+
+
+void pack_A_sp(float* A, float* A_p, sp_pack_t* sp_pack, int M, int K, int k_c, int m_r) {
+
+  int nnz_col, ind_blk, outer_ind = 0, a_ind = 0;
+  float a_tmp = 0;
+
+  int mr_bins = m_r + 1;
+  int** cnt = (int**) malloc(mr_bins * sizeof(int*));
+  int* cnt_inds = (int*) malloc(mr_bins * sizeof(int));
+
+
+  for(int i = 0; i < mr_bins; i++) {
+    cnt[i] = (int*) malloc(k_c * sizeof(int));
+  }
+
+
+  int* nnz_outer = (int*) calloc(((M*K) / m_r) , sizeof(int)); // storing number of nonzeros 
+                                                        // in each outer prod col of A
+
+  int* k_inds = (int*) calloc(((M*K) / m_r) , sizeof(int)); // storing kc_ind 
+                                                        // of each outer prod col of A
+
+  int* loc_m = (int*) calloc(M*K , sizeof(int)); // array for storing M dim C writeback location for each nnz in A
+                                // each value ranges from 0 to mr-1
+
+  int* nnz_outer_blk = (int*) calloc((M / m_r) , sizeof(int)); // storing number of nnz vals
+                                                    // in each outer prod block of A
+
+  int* k_cnt = (int*) calloc((M / m_r) , sizeof(int)); // storing number of nnz cols (b/w 0 and k_c) 
+                                                    // in each outer prod block of A
+
+
+  for(int m3 = 0; m3 < M; m3 += m_r) {
+
+     ind_blk = 0;
+     memset(cnt_inds, 0, mr_bins*sizeof(int));
+
+     for(int i = 0; i < k_c; i++) {
+
+        nnz_col = 0;
+
+        for(int j = 0; j < m_r; j++) {
+
+           if(A[m3*K + i + j*K] != 0) {
+              nnz_col++;
+           }
+        }
+
+        cnt[nnz_col][cnt_inds[nnz_col]++] = i;
+     }
+
+
+     for(int c = m_r; c > 0; c--) {
+
+        if(!cnt_inds[c]) {
+           // ind_blk += 6;
+           continue;
+        }
+
+        for(int i = 0; i < cnt_inds[c]; i++) {
+
+           for(int j = 0; j < m_r; j++) {
+              
+              a_tmp = A[m3*K + cnt[c][i] + j*K];
+              if(a_tmp != 0) {
+                 A_p[a_ind + ind_blk] = a_tmp;
+                 loc_m[a_ind + ind_blk++] = j;
+              }
+           }
+
+           k_inds[outer_ind] = cnt[c][i];
+           nnz_outer[outer_ind++] = c;
+        }
+
+        k_cnt[m3 / m_r] += cnt_inds[c];  
+     }
+
+     // outer_ind += cnt_inds[0]; // skip ahead over cols with 0 nonzeros
+     a_ind += ind_blk;
+     nnz_outer_blk[m3 / m_r] = ind_blk;
+  }
+
+
+  for(int i = 0; i < mr_bins; i++) {
+    free(cnt[i]);
+  }
+
+  free(cnt);
+  free(cnt_inds);
+
+
+  sp_pack->A_sp_p = A_p;
+  sp_pack->loc_m = loc_m;
+  sp_pack->nnz_outer = nnz_outer;
+  sp_pack->k_inds = k_inds;
+  sp_pack->nnz_outer_blk = nnz_outer_blk;
+  sp_pack->k_cnt = k_cnt;
+}
+
+
+
+
+
+arm_status outer_fp32_5x5_sp(
+  const sp_pack_t* pSrcA,
+  const arm_matrix_instance_f32 * pSrcB,
+        arm_matrix_instance_f32 * pDst, 
+  uint32_t M, uint32_t K, uint32_t N) {
+
+
+  float32_t *A = pSrcA->A_sp_p;                /* Input data matrix pointer A */
+  float32_t *B = pSrcB->pData;                /* Input data matrix pointer B */
+  float32_t C[5*5];
+ 
+  int* nnz_outer = pSrcA->nnz_outer;
+  int* k_inds = pSrcA->k_inds;
+  int* loc_m = pSrcA->loc_m;
+  int* nnz_outer_blk = pSrcA->nnz_outer_blk;
+  int* k_cnt = pSrcA->k_cnt;
+
+  uint32_t m, n, k, kk, m_cnt, locm, C_ind = 0U;  /* Loop counters */
+  arm_status status;                             /* Status of matrix multiplication */
+
+  float32_t *A_ptr = pSrcA->A_sp_p;                /* Input data matrix pointer A */
+  float32_t *B_ptr, *C_curr;
+
+  uint32_t en = N / 5;
+  uint32_t em = M / 5;
+
+  /* The following loop performs the dot-product of each row in pSrcA with each column in pSrcB */
+  /* row loop */
+  for(m = 0U; m < em; m++) {
+    /* Output pointer is set to starting address of row being processed */
+
+    C_ind = m*5*N;
+
+    /* For every row wise process, B pointer is set to starting address of pSrcB data */
+    // B = pSrcB->pData;
+
+    // number of columns with nnz values
+    kk = k_cnt[m];
+
+    /* column loop */
+
+    for(n = 0U; n < en; n++) {
+
+      C[0] = 0;
+      C[1] = 0;
+      C[2] = 0;
+      C[3] = 0;
+      C[4] = 0;
+
+      C[5] = 0;
+      C[6] = 0;
+      C[7] = 0;
+      C[8] = 0;
+      C[9] = 0;
+
+      C[10] = 0;
+      C[11] = 0;
+      C[12] = 0;
+      C[13] = 0;
+      C[14] = 0;
+
+      C[15] = 0;
+      C[16] = 0;
+      C[17] = 0;
+      C[18] = 0;
+      C[19] = 0;
+
+      C[20] = 0;
+      C[21] = 0;
+      C[22] = 0;
+      C[23] = 0;
+      C[24] = 0;
+
+      A = A_ptr;
+      /* Update pointer B to point to starting address of next column */
+      B_ptr = pSrcB->pData + 5*n;
+
+      /* matrix multiplication */
+      for(k = 0U; k < kk; k++) {
+      
+        // m_cnt = nnz_outer[k];
+        // B = B_ptr + k_inds[k]*N;
+        m_cnt = *nnz_outer++;
+        B = B_ptr + (*k_inds++ * N);
+
+        for(int j = 0; j < m_cnt; j++) {
+
+          locm = *loc_m * 5;
+          C[locm++] +=  *A * *B++;
+          C[locm++] +=  *A * *B++;
+          C[locm++] +=  *A * *B++;
+          C[locm++] +=  *A * *B++;
+          C[locm] +=  *A++ * *B;
+
+          B -= 4;
+          loc_m++;
+        }
+
+      }
+
+      nnz_outer -= kk;
+      k_inds -= kk;
+      loc_m -= nnz_outer_blk[m];
+      /* Store result in destination buffer */
+
+      C_curr = pDst->pData + C_ind;
+
+      *C_curr++ = C[0];
+      *C_curr++ = C[1];
+      *C_curr++ = C[2];
+      *C_curr++ = C[3];
+      *C_curr = C[4];
+
+      C_curr = C_curr - 4 + N;
+
+      *C_curr++ = C[5];
+      *C_curr++ = C[6];
+      *C_curr++ = C[7];
+      *C_curr++ = C[8];
+      *C_curr = C[9];
+
+      C_curr = C_curr - 4 + N;
+
+      *C_curr++ = C[10];
+      *C_curr++ = C[11];
+      *C_curr++ = C[12];
+      *C_curr++ = C[13];
+      *C_curr = C[14];
+
+      C_curr = C_curr - 4 + N;
+
+      *C_curr++ = C[15];
+      *C_curr++ = C[16];
+      *C_curr++ = C[17];
+      *C_curr++ = C[18];
+      *C_curr = C[19];
+
+      C_curr = C_curr - 4 + N;
+
+      *C_curr++ = C[20];
+      *C_curr++ = C[21];
+      *C_curr++ = C[22];
+      *C_curr++ = C[23];
+      *C_curr = C[24];
+
+
+      C_ind += 5;
+    }
+
+    /* Update pointer A_ptr to point to starting address of next row */
+    // A_ptr += 5*K;
+    A_ptr += nnz_outer_blk[m];
+    loc_m += nnz_outer_blk[m];
+    nnz_outer += kk;
+    k_inds += kk;
+  }
+
+  /* Set status as ARM_MATH_SUCCESS */
+  status = ARM_MATH_SUCCESS;
+
+
+  /* Return to application */
+  return (status);
+}
+
+
+
 arm_status outer_fp32_5x5_old(
   const arm_matrix_instance_f32 * pSrcA,
   const arm_matrix_instance_f32 * pSrcB,

@@ -23,6 +23,34 @@ void sram_bw_prof() ;
 void arm_vs_mema_fp32();
 void arm_vs_mema_q15();
 
+
+
+typedef struct sp_pack_t {
+   int* loc_m; // M dim C writeback location for each nnz value in A
+   int* nnz_outer; // number of nnz in every outer prod col vec (with len m_r) of A;
+   int* k_inds; // density-based reorder indices of A cols within a mrxkcxnr tile
+   int* nnz_outer_blk; // number of nonzeros in each mrxkcxnr outer product blk
+   int* k_cnt; // number of nnz cols (b/w 0 and k_c) in each outer prod block of A
+   float* A_sp_p; //sparse packed A (only storing nonzeros)
+} sp_pack_t;
+
+arm_status outer_fp32_5x5_sp(
+  const sp_pack_t* pSrcA,
+  const arm_matrix_instance_f32 * pSrcB,
+        arm_matrix_instance_f32 * pDst, 
+  uint32_t M, uint32_t K, uint32_t N);
+
+void pack_A_sp(float* A, float* A_p, sp_pack_t* sp_pack, int M, int K, int k_c, int m_r);
+
+void rand_sparse(float* mat, int r, int c, float sparsity);
+void print_mat1(float* mat, int rows, int cols);
+void print_arr(float* mat, int len);
+void print_arr_int(int* mat, int len);
+
+
+
+
+
 arm_status inner_fp32_1x4x1(
   const arm_matrix_instance_f32 * pSrcA,
   const arm_matrix_instance_f32 * pSrcB,
@@ -124,4 +152,3 @@ arm_status outer_q15_6x2(
   const arm_matrix_instance_q15 * pSrcB,
         arm_matrix_instance_q15 * pDst,
         q15_t                   * pState);
-
