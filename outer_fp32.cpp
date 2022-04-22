@@ -822,8 +822,201 @@ arm_status outer_fp32_5x5(
 
 
 
+arm_status outer_fp32_5x5_sp_test(
+  const arm_matrix_instance_f32 * pSrcA,
+  const arm_matrix_instance_f32 * pSrcB,
+        arm_matrix_instance_f32 * pDst)
+{
+  float32_t *A = pSrcA->pData;                /* Input data matrix pointer A */
+  float32_t *B = pSrcB->pData;                /* Input data matrix pointer B */
+  float32_t *C = pDst->pData;                 /* Output data matrix pointer */
+  float32_t C00, C01, C02, C03, C04,
+  C10, C11, C12, C13, C14, C20, C21, 
+  C22, C23, C24, C30, C31, C32, C33, 
+  C34, C40, C41, C42, C43, C44;    /* Temporary output data  */
+  uint16_t M = pSrcA->numRows;            /* Number of rows of input matrix A */
+  uint16_t N = pSrcB->numCols;            /* Number of columns of input matrix B */
+  uint16_t K = pSrcA->numCols;            /* Number of columns of input matrix A */
+  uint32_t m, n, k, C_ind = 0U;  /* Loop counters */
+  arm_status status;                             /* Status of matrix multiplication */
 
-void pack_A_sp(float* A, float* A_p, sp_pack_t* sp_pack, int M, int K, int k_c, int m_r) {
+  float32_t *A_ptr = pSrcA->pData;                /* Input data matrix pointer A */
+  float32_t *B_ptr, *C_curr;
+
+  uint32_t en = N / 5;
+  uint32_t em = M / 5;
+
+  /* The following loop performs the dot-product of each row in pSrcA with each column in pSrcB */
+  /* row loop */
+  for(m = 0U; m < em; m++) {
+    /* Output pointer is set to starting address of row being processed */
+
+    C_ind = m*5*N;
+
+    /* For every row wise process, B pointer is set to starting address of pSrcB data */
+    // B = pSrcB->pData;
+
+    /* column loop */
+    for(n = 0U; n < en; n++) {
+
+      C00 = 0;
+      C01 = 0;
+      C02 = 0;
+      C03 = 0;
+      C04 = 0;
+
+      C10 = 0;
+      C11 = 0;
+      C12 = 0;
+      C13 = 0;
+      C14 = 0;
+
+      C20 = 0;
+      C21 = 0;
+      C22 = 0;
+      C23 = 0;
+      C24 = 0;
+
+      C30 = 0;
+      C31 = 0;
+      C32 = 0;
+      C33 = 0;
+      C34 = 0;
+
+      C40 = 0;
+      C41 = 0;
+      C42 = 0;
+      C43 = 0;
+      C44 = 0;
+
+      /* Update pointer B to point to starting address of next column */
+      B_ptr = pSrcB->pData + 5*n;
+
+      /* matrix multiplication */
+      for(k = 0U; k < K; k++) {
+      
+        A = A_ptr + k ;
+        B = B_ptr + k*N;
+
+        if(*A != 0) {
+          C00 += *A * *B++;
+          C01 += *A * *B++;
+          C02 += *A * *B++;
+          C03 += *A * *B++;
+          C04 += *A * *B;
+          B -= 4;
+        }
+
+        A += K;
+
+        if(*A != 0) {
+          C10 += *A * *B++;
+          C11 += *A * *B++;
+          C12 += *A * *B++;
+          C13 += *A * *B++;
+          C14 += *A * *B;
+          B -= 4;
+        }
+
+        A += K;
+
+        if(*A != 0) {
+          C20 += *A * *B++;
+          C21 += *A * *B++;
+          C22 += *A * *B++;
+          C23 += *A * *B++;
+          C24 += *A * *B;
+          B -= 4;
+        }
+
+        A += K;
+
+        if(*A != 0) {
+          C30 += *A * *B++;
+          C31 += *A * *B++;
+          C32 += *A * *B++;
+          C33 += *A * *B++;
+          C34 += *A * *B;
+          B -= 4;
+        }
+
+        A += K;
+
+        if(*A != 0) {
+          C40 += *A * *B++;
+          C41 += *A * *B++;
+          C42 += *A * *B++;
+          C43 += *A * *B++;
+          C44 += *A * *B;
+        }
+        // B = B - 4 + N;
+
+      }
+
+      /* Store result in destination buffer */
+
+      C_curr = pDst->pData + C_ind;
+
+      *C_curr++ = C00;
+      *C_curr++ = C01;
+      *C_curr++ = C02;
+      *C_curr++ = C03;
+      *C_curr = C04;
+
+      C_curr = C_curr - 4 + N;
+
+      *C_curr++ = C10;
+      *C_curr++ = C11;
+      *C_curr++ = C12;
+      *C_curr++ = C13;
+      *C_curr = C14;
+
+      C_curr = C_curr - 4 + N;
+
+      *C_curr++ = C20;
+      *C_curr++ = C21;
+      *C_curr++ = C22;
+      *C_curr++ = C23;
+      *C_curr = C24;
+
+      C_curr = C_curr - 4 + N;
+
+      *C_curr++ = C30;
+      *C_curr++ = C31;
+      *C_curr++ = C32;
+      *C_curr++ = C33;
+      *C_curr = C34;
+
+      C_curr = C_curr - 4 + N;
+
+      *C_curr++ = C40;
+      *C_curr++ = C41;
+      *C_curr++ = C42;
+      *C_curr++ = C43;
+      *C_curr = C44;
+
+
+      C_ind += 5;
+
+    }
+
+    /* Update pointer A_ptr to point to starting address of next row */
+    A_ptr += 5*K;
+
+  }
+
+  /* Set status as ARM_MATH_SUCCESS */
+  status = ARM_MATH_SUCCESS;
+
+
+  /* Return to application */
+  return (status);
+}
+
+
+
+void pack_A_sp(float* A, float* A_p, sp_pack_t* sp_pack, 
+  int M, int K, int k_c, int m_r) {
 
   int nnz_col, ind_blk, outer_ind = 0, a_ind = 0;
   float a_tmp = 0;

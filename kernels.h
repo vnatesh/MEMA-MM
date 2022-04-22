@@ -34,11 +34,6 @@ typedef struct sp_pack_t {
    float* A_sp_p; //sparse packed A (only storing nonzeros)
 } sp_pack_t;
 
-arm_status outer_fp32_5x5_sp(
-  const sp_pack_t* pSrcA,
-  const arm_matrix_instance_f32 * pSrcB,
-        arm_matrix_instance_f32 * pDst, 
-  uint32_t M, uint32_t K, uint32_t N);
 
 void pack_A_sp(float* A, float* A_p, sp_pack_t* sp_pack, int M, int K, int k_c, int m_r);
 
@@ -47,6 +42,16 @@ void print_mat1(float* mat, int rows, int cols);
 void print_arr(float* mat, int len);
 void print_arr_int(int* mat, int len);
 
+arm_status outer_fp32_5x5_sp(
+  const sp_pack_t* pSrcA,
+  const arm_matrix_instance_f32 * pSrcB,
+        arm_matrix_instance_f32 * pDst, 
+  uint32_t M, uint32_t K, uint32_t N);
+
+arm_status outer_fp32_5x5_sp_test(
+  const arm_matrix_instance_f32 * pSrcA,
+  const arm_matrix_instance_f32 * pSrcB,
+        arm_matrix_instance_f32 * pDst);
 
 
 
