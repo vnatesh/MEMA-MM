@@ -15,6 +15,82 @@ import math
 
 
 
+
+def plot_arm_vs_mema_fp32_m_vs_k(fname = 'arm_vs_mema_m_vs_k'):
+	plt.rcParams.update({'font.size': 16})
+	markers = ['o','v','s','d','^']
+	colors = ['b','g','aqua','k','m','r']
+	df1 = pandas.read_csv('arm_vs_mema_fp32.csv')
+	N1 = range(5,300,20)
+	N2 = range(4,300,16)
+	tput_inner_1x16x1 = [float(2*(i**3)) / float(df1[(df1['algo'] == 'inner_1x16x1') \
+		& (df1['M'] == i)]['time'].values[0]) for i in N1]
+	tput_inner_2x8x2 = [float(2*(i**3)) / float(df1[(df1['algo'] == 'inner_2x8x2') \
+		& (df1['M'] == i)]['time'].values[0]) for i in N2]
+	tput_mema = [float(2*(i**3)) / float(df1[(df1['algo'] == 'mema') \
+		& (df1['M'] == i)]['time'].values[0]) for i in N1]
+	fig = plt.figure(figsize = (6,4))
+	plt.title('(a) FP32 Throughput of MEMA vs ARM MCU', fontsize = 14)
+	plt.plot(N1, tput_mema, 'b', label = 'mema_outer_5x5', marker = markers[4], color = colors[4])
+	plt.plot(N2, tput_inner_2x8x2, 'b', label = 'arm_inner_2x8x2', marker = markers[1], color = colors[1])
+	plt.plot(N1, tput_inner_1x16x1, 'b', label = 'arm_inner_1x16x1', marker = markers[3], color = colors[3])
+	plt.legend(loc = "lower right", prop={'size': 10})
+	plt.xlabel('N', fontsize = 16)
+	plt.ylabel('Throughput (MFLOPs/sec)', fontsize = 14)
+	plt.xticks(range(0,111,20),fontsize = 14)
+	plt.yticks(fontsize = 14)
+	# plt.ylim(ymin = 2e-8,ymax = 0.00012)
+	# plt.ticklabel_format(axis="y", style="sci")
+	plt.savefig("%s.pdf" % fname, bbox_inches='tight')
+	plt.show()
+	plt.clf()
+	plt.close('all')
+
+
+
+
+def plot_arm_vs_mema_fp32_tput_k(fname = 'arm_vs_mema_fp32_tput_k3'):
+	plt.rcParams.update({'font.size': 16})
+	markers = ['o','v','s','d','^']
+	colors = ['b','g','aqua','k','m','r']
+	bws = ['1', '1/2','1/3','1/4']
+	for x in range(1,5):
+		df1 = pandas.read_csv('arm_vs_mema_fp32_k3.csv')
+		K1 = range(5,166,5)
+		K2 = range(8,169,8)
+		M1 = range(60,61,20)
+		for M in M1:
+			N = M
+			# tput_inner_1x16x1 = [float(2*M*N*i) / float(df1[(df1['algo'] == 'inner_1x16x1') \
+			# 	& (df1['K'] == i) & (df1['M'] == M)]['time'].values[0]) for i in K1]
+			tput_inner_2x8x2 = [float(2*M*N*i) / float(df1[(df1['algo'] == 'inner_2x8x2') \
+				& (df1['K'] == i) & (df1['M'] == M) & (df1['bw'] == x)]['time'].values[0]) for i in K2]
+			tput_mema = [float(2*M*N*i) / float(df1[(df1['algo'] == 'mema') \
+				& (df1['K'] == i) & (df1['M'] == M) & (df1['bw'] == x)]['time'].values[0]) for i in K1]
+			fig = plt.figure(figsize = (6,4))
+			plt.title('FP32 Throughput When Input BW = %s * peak_BW' % bws[x-1], fontsize = 14)
+			plt.plot(K1, tput_mema, 'b', label = 'mema_outer_5x5', marker = markers[4], color = colors[4])
+			plt.plot(K2, tput_inner_2x8x2, 'b', label = 'arm_inner_2x8x2', marker = markers[1], color = colors[1])
+			# plt.plot(K1, tput_inner_1x16x1, 'b', label = 'arm_inner_1x16x1', marker = markers[3], color = colors[3])
+			plt.legend(loc = "lower right", prop={'size': 10})
+			plt.xlabel('K (M=N=%d)' % M, fontsize = 16)
+			plt.ylabel('Throughput (MFLOPs/sec)', fontsize = 14)
+			plt.xticks(range(0,180,20),fontsize = 14)
+			plt.yticks(range(0,36,5), fontsize = 14)
+			# plt.ylim(ymin = 2e-8,ymax = 0.00012)
+			# plt.ticklabel_format(axis="y", style="sci")
+			plt.savefig("%s_%d_%d.pdf" % (fname, M, x), bbox_inches='tight')
+			plt.show()
+			plt.clf()
+			plt.close('all')
+
+
+
+plot_arm_vs_mema_fp32_tput_k()
+
+
+
+
 def plot_mema_fp32_sparse_levels(fname = 'mema_fp32_sparse_levels'):
 	plt.rcParams.update({'font.size': 16})
 	markers = ['o','v','s','d','^']

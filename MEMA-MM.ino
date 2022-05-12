@@ -1473,6 +1473,465 @@ void arm_vs_mema_fp32_sp() {
 
 
 
+
+
+
+
+void arm_vs_mema_fp32_k() {
+
+
+  arm_matrix_instance_f32 A;      /* Matrix A Instance */
+  arm_matrix_instance_f32 B;     /* Matrix B(A transpose) instance */
+  arm_matrix_instance_f32 C;   /* Matrix C( B multiply with A) instance */
+  arm_matrix_instance_f32 C_ref;   /* Matrix C( B multiply with A) instance */
+
+  arm_status status;
+
+  unsigned long start1, end1, diff;
+  float *A_f32, *B_f32, *C_f32, *C_f32_ref;
+  uint32_t M = 100, N = 100, K = 100;
+  char buf[100];
+
+  A_f32 = (float *) malloc( M*K*sizeof( float ));
+  B_f32 = (float *) malloc( K*N*sizeof( float ));
+  C_f32_ref = (float *) calloc( M*N, sizeof( float ));
+
+  // gettimeofday (&start, NULL);
+  srand(time(NULL));
+  rand_init(A_f32, M, K);
+  rand_init(B_f32, K, N);
+
+  arm_mat_init_f32(&A, M, K, (float32_t *) A_f32);
+  arm_mat_init_f32(&B, K, N, (float32_t *) B_f32);
+  arm_mat_init_f32(&C_ref, M, N, (float32_t *) C_f32_ref);
+
+
+  start1 = micros();
+  status = arm_mat_mult_f32(&A, &B, &C_ref);
+  end1 = micros();
+  diff = end1 - start1;
+  Serial.print("warmup sgemm time: "); 
+  Serial.println(diff); //prints time since program started
+
+  free(A_f32);
+  free(B_f32);
+  free(C_f32_ref);
+
+  
+  
+  Serial.println("\nM,N,K,algo,time");
+
+  float* tmp_arr = (float *) malloc( 1000*sizeof( float ));
+  for(int i = 0; i < 1000; i++) {
+    tmp_arr[i] = (float) rand();
+  }
+
+  for(int t = 0; t < 4; t++) {
+
+    for(int m = 20; m < 81; m += 20) {
+
+      M = m;
+      N = m;
+
+      for(int i = 5; i < 166; i+=5) {
+
+        A_f32 = (float *) malloc( M*i*sizeof( float ));
+        B_f32 = (float *) malloc( i*N*sizeof( float ));
+        C_f32 = (float *) calloc( M*N, sizeof( float ));
+
+        srand(time(NULL));
+        rand_init(A_f32, M,i);
+        rand_init(B_f32, i,N);
+
+        arm_mat_init_f32(&A, M,i, (float32_t *) A_f32);
+        arm_mat_init_f32(&B, i,N, (float32_t *) B_f32);
+        arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
+
+        // start1 = micros();
+        // status = inner_fp32_1x16x1_test(&A, &B, &C, tmp_arr);
+        // end1 = micros();
+        // diff = end1 - start1;
+        // sprintf(buf, "%d,%d,%d,inner_1x16x1,%lu", M,N,i,diff);
+        // Serial.println(buf);
+
+
+
+
+        free(C_f32);
+        C_f32 = (float *) calloc( M*N, sizeof( float ));
+        arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
+
+
+        start1 = micros();
+        status = outer_fp32_5x5_test(&A, &B, &C, tmp_arr, t);
+        end1 = micros();
+        diff = end1 - start1;
+        sprintf(buf, "%d,%d,%d,%d,mema,%lu", M,N,i,t+1,diff);
+        Serial.println(buf); //prints time since program started
+
+
+      
+        free(A_f32);
+        free(B_f32);
+        free(C_f32);
+      }
+
+
+
+      for(int i = 8; i < 169; i+=8) {
+
+        A_f32 = (float *) malloc( M*i*sizeof( float ));
+        B_f32 = (float *) malloc( i*N*sizeof( float ));
+        C_f32 = (float *) calloc( M*N, sizeof( float ));
+
+        srand(time(NULL));
+        rand_init(A_f32, M,i);
+        rand_init(B_f32, i,N);
+
+        arm_mat_init_f32(&A, M,i, (float32_t *) A_f32);
+        arm_mat_init_f32(&B, i,N, (float32_t *) B_f32);
+        arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
+
+        start1 = micros();
+        status = inner_fp32_2x8x2_test(&A, &B, &C, tmp_arr, t);
+        end1 = micros();
+        diff = end1 - start1;
+        sprintf(buf, "%d,%d,%d,%d,inner_2x8x2,%lu", M,N,i,t+1,diff);
+        Serial.println(buf); //prints time since program started
+
+      
+        free(A_f32);
+        free(B_f32);
+        free(C_f32);
+      }
+    }
+  }
+
+
+  free(tmp_arr);
+}
+
+
+
+
+
+
+
+void arm_vs_mema_fp32_mk();
+
+void arm_vs_mema_fp32_mk() {
+
+
+  arm_matrix_instance_f32 A;      /* Matrix A Instance */
+  arm_matrix_instance_f32 B;     /* Matrix B(A transpose) instance */
+  arm_matrix_instance_f32 C;   /* Matrix C( B multiply with A) instance */
+  arm_matrix_instance_f32 C_ref;   /* Matrix C( B multiply with A) instance */
+
+  arm_status status;
+
+  unsigned long start1, end1, diff;
+  float *A_f32, *B_f32, *C_f32, *C_f32_ref;
+  uint32_t M = 100, N = 100, K = 100;
+  char buf[100];
+
+  A_f32 = (float *) malloc( M*K*sizeof( float ));
+  B_f32 = (float *) malloc( K*N*sizeof( float ));
+  C_f32_ref = (float *) calloc( M*N, sizeof( float ));
+
+  // gettimeofday (&start, NULL);
+  srand(time(NULL));
+  rand_init(A_f32, M, K);
+  rand_init(B_f32, K, N);
+
+  arm_mat_init_f32(&A, M, K, (float32_t *) A_f32);
+  arm_mat_init_f32(&B, K, N, (float32_t *) B_f32);
+  arm_mat_init_f32(&C_ref, M, N, (float32_t *) C_f32_ref);
+
+
+  start1 = micros();
+  status = arm_mat_mult_f32(&A, &B, &C_ref);
+  end1 = micros();
+  diff = end1 - start1;
+  Serial.print("warmup sgemm time: "); 
+  Serial.println(diff); //prints time since program started
+
+  free(A_f32);
+  free(B_f32);
+  free(C_f32_ref);
+
+  
+  N = 60;
+  K = 5;
+
+  start1 = micros();
+
+  if(((M >= N) && K <= ((2*M*5) / (M + 5)))) {
+
+  } else if((N >= M) && (K <= ((2*N*5) / (N + 5)))) {
+
+  }  else {
+
+  }
+
+  end1 = micros();
+  diff = end1 - start1;
+  sprintf(buf, "runtime,%lu",diff);
+  Serial.println(buf); //prints time since program started
+
+
+  Serial.println("\nM,N,K,algo,time");
+
+  for(int m = 5; m < 300; m += 20) {
+
+    A_f32 = (float *) malloc( m*K*sizeof( float ));
+    B_f32 = (float *) malloc( K*N*sizeof( float ));
+    C_f32 = (float *) calloc( m*N, sizeof( float ));
+
+    srand(time(NULL));
+    rand_init(A_f32, m,K);
+    rand_init(B_f32, K,N);
+
+    arm_mat_init_f32(&A, m,K, (float32_t *) A_f32);
+    arm_mat_init_f32(&B, K,N, (float32_t *) B_f32);
+    arm_mat_init_f32(&C, m, N, (float32_t *) C_f32);
+
+
+    free(C_f32);
+    C_f32 = (float *) calloc( m*N, sizeof( float ));
+    arm_mat_init_f32(&C, m, N, (float32_t *) C_f32);
+
+
+    start1 = micros();
+    status = outer_fp32_5x5(&A, &B, &C);
+    end1 = micros();
+    diff = end1 - start1;
+    sprintf(buf, "%d,%d,%d,k first,%lu", m,N,K,diff);
+    Serial.println(buf); //prints time since program started
+
+
+    free(C_f32);
+    C_f32 = (float *) calloc( m*N, sizeof( float ));
+    arm_mat_init_f32(&C, m, N, (float32_t *) C_f32);
+
+
+    start1 = micros();
+    status = outer_fp32_5x5_m_first(&A, &B, &C);
+    end1 = micros();
+    diff = end1 - start1;
+    sprintf(buf, "%d,%d,%d,m first,%lu", m,N,K,diff);
+    Serial.println(buf); //prints time since program started
+
+
+  
+    free(A_f32);
+    free(B_f32);
+    free(C_f32);
+  }
+
+
+
+  for(int m = 4; m < 300; m+=16) {
+
+    A_f32 = (float *) malloc( m*K*sizeof( float ));
+    B_f32 = (float *) malloc( K*N*sizeof( float ));
+    C_f32 = (float *) calloc( m*N, sizeof( float ));
+
+    srand(time(NULL));
+    rand_init(A_f32, m,K);
+    rand_init(B_f32, K,N);
+
+    arm_mat_init_f32(&A, m,K, (float32_t *) A_f32);
+    arm_mat_init_f32(&B, K,N, (float32_t *) B_f32);
+    arm_mat_init_f32(&C, m, N, (float32_t *) C_f32);
+
+    start1 = micros();
+    status = inner_fp32_2x8x2(&A, &B, &C);
+    end1 = micros();
+    diff = end1 - start1;
+    sprintf(buf, "%d,%d,%d,inner_2x8x2,%lu", m,N,K,diff);
+    Serial.println(buf); //prints time since program started
+
+  
+    free(A_f32);
+    free(B_f32);
+    free(C_f32);
+  }
+  
+}
+
+
+
+
+
+
+
+
+
+
+void testing() {
+
+  arm_matrix_instance_f32 A;      /* Matrix A Instance */
+  arm_matrix_instance_f32 B;     /* Matrix B(A transpose) instance */
+  arm_matrix_instance_f32 C;   /* Matrix C( B multiply with A) instance */
+  arm_matrix_instance_f32 C_ref;   /* Matrix C( B multiply with A) instance */
+
+  arm_status status;
+
+  unsigned long start1, end1, diff;
+  float *A_f32, *B_f32, *C_f32, *C_f32_ref;
+  uint32_t M = 200, N = 70, K = 5;
+
+  A_f32 = (float *) malloc( M*K*sizeof( float ));
+  B_f32 = (float *) malloc( K*N*sizeof( float ));
+  C_f32_ref = (float *) malloc( M*N*sizeof( float ));
+
+  char buf1[100];
+  sprintf(buf1, "M = %d, K = %d, N = %d", M, K, N);
+  Serial.println(buf1);
+
+  // gettimeofday (&start, NULL);
+  srand(time(NULL));
+  rand_init(A_f32, M, K);
+  rand_init(B_f32, K, N);
+
+  arm_mat_init_f32(&A, M, K, (float32_t *) A_f32);
+  arm_mat_init_f32(&B, K, N, (float32_t *) B_f32);
+  arm_mat_init_f32(&C_ref, M, N, (float32_t *) C_f32_ref);
+
+
+  start1 = micros();
+
+  status = arm_mat_mult_f32(&A, &B, &C_ref);
+
+  end1 = micros();
+  diff = end1 - start1;
+  Serial.print("arm sgemm time: "); 
+  Serial.println(diff); //prints time since program started
+
+
+
+  float* tmp_arr = (float *) malloc( 1000*sizeof( float ));
+  for(int i = 0; i < 1000; i++) {
+    tmp_arr[i] = (float) rand();
+  }
+
+
+
+  C_f32 = (float *) calloc( M*N, sizeof( float ));
+  arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
+
+  start1 = micros();
+
+  status = outer_fp32_5x5(&A, &B, &C);
+
+  end1 = micros();
+  diff = end1 - start1;
+  Serial.print("sgemm outer_fp32_5x5_k_first time: "); 
+  Serial.println(diff); //prints time since program started
+  // print_mat(&C, M, N);
+  // print_mat(&C_ref, M, N);
+  f32_gemm_checker(C.pData, C_ref.pData, N, M, K);
+
+
+
+
+
+
+  free(C_f32);
+  C_f32 = (float *) calloc( M*N, sizeof( float ));
+  arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
+
+  start1 = micros();
+
+  status = inner_fp32_2x8x2(&A, &B, &C);
+
+  end1 = micros();
+  diff = end1 - start1;
+  Serial.print("sgemm inner_fp32_5x5 time: "); 
+  Serial.println(diff); //prints time since program started
+  // print_mat(&C, M, N);
+  // print_mat(&C_ref, M, N);
+  f32_gemm_checker(C.pData, C_ref.pData, N, M, K);
+
+
+
+
+
+  free(C_f32);
+  C_f32 = (float *) calloc( M*N, sizeof( float ));
+  arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
+
+  start1 = micros();
+
+  status = outer_fp32_5x5_m_first(&A, &B, &C);
+
+  end1 = micros();
+  diff = end1 - start1;
+  Serial.print("sgemm outer_fp32_5x5_m_first time: "); 
+  Serial.println(diff); //prints time since program started
+  // print_mat(&C, M, N);
+  // print_mat(&C_ref, M, N);
+  f32_gemm_checker(C.pData, C_ref.pData, N, M, K);
+
+
+
+
+
+
+  free(C_f32);
+  C_f32 = (float *) calloc( M*N, sizeof( float ));
+  arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
+
+  start1 = micros();
+
+  status = outer_fp32_5x5_m_first_test(&A, &B, &C, tmp_arr, 1);
+
+  end1 = micros();
+  diff = end1 - start1;
+  Serial.print("sgemm outer_fp32_5x5_m_first test time: "); 
+  Serial.println(diff); //prints time since program started
+
+  // print_mat(&A, M, K);
+  // print_mat(&B, K, N);
+
+
+  f32_gemm_checker(C.pData, C_ref.pData, N, M, K);
+
+
+
+  free(C_f32);
+  C_f32 = (float *) calloc( M*N, sizeof( float ));
+  arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
+
+  start1 = micros();
+
+  status = outer_fp32_5x5_test(&A, &B, &C, tmp_arr, 1);
+
+  end1 = micros();
+  diff = end1 - start1;
+  Serial.print("sgemm outer_fp32_5x5_k_first test time: "); 
+  Serial.println(diff); //prints time since program started
+  // print_mat(&C, M, N);
+  // print_mat(&C_ref, M, N);
+  f32_gemm_checker(C.pData, C_ref.pData, N, M, K);
+
+
+
+
+
+  free(tmp_arr);
+  free(A_f32);
+  free(B_f32);
+  free(C_f32);
+  free(C_f32_ref);
+}
+
+
+
+
+
+
+
 void setup() {
  // put your setup code here, to run once:
 
@@ -1491,7 +1950,11 @@ void loop() {
   // power_inner_q15();   
 //  power_outer_q15();  
 //  test();
-   arm_vs_mema_fp32_sp();
+   // arm_vs_mema_fp32_sp();
+  // arm_vs_mema_fp32_k();
+  arm_vs_mema_fp32_mk();
+
+  // testing();
 //  power_inner_fp32();
 //  power_outer_fp32();
   delay(10000); 

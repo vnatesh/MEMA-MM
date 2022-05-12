@@ -53,6 +53,44 @@ arm_status outer_fp32_5x5_sp_test(
   const arm_matrix_instance_f32 * pSrcB,
         arm_matrix_instance_f32 * pDst);
 
+arm_status outer_fp32_5x5_test(
+  const arm_matrix_instance_f32 * pSrcA,
+  const arm_matrix_instance_f32 * pSrcB,
+        arm_matrix_instance_f32 * pDst,
+        float* tmp_arr, int throttle);
+
+arm_status inner_fp32_1x16x1_test(
+  const arm_matrix_instance_f32 * pSrcA,
+  const arm_matrix_instance_f32 * pSrcB,
+        arm_matrix_instance_f32 * pDst, float* tmp_arr, int throttle);
+
+arm_status inner_fp32_2x8x2_test(
+  const arm_matrix_instance_f32 * pSrcA,
+  const arm_matrix_instance_f32 * pSrcB,
+        arm_matrix_instance_f32 * pDst, float* tmp_arr, int throttle);
+
+arm_status outer_fp32_5x5_m_first(
+  const arm_matrix_instance_f32 * pSrcA,
+  const arm_matrix_instance_f32 * pSrcB,
+        arm_matrix_instance_f32 * pDst);
+
+void testing() ;
+
+arm_status outer_fp32_4x4_m_first(
+  const arm_matrix_instance_f32 * pSrcA,
+  const arm_matrix_instance_f32 * pSrcB,
+        arm_matrix_instance_f32 * pDst);
+
+arm_status outer_fp32_5x5_m_first_test(
+  const arm_matrix_instance_f32 * pSrcA,
+  const arm_matrix_instance_f32 * pSrcB,
+        arm_matrix_instance_f32 * pDst,
+        float* tmp_arr, int throttle);
+
+arm_status outer_fp32_6x5_m_first(
+  const arm_matrix_instance_f32 * pSrcA,
+  const arm_matrix_instance_f32 * pSrcB,
+        arm_matrix_instance_f32 * pDst);
 
 
 
