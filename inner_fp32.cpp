@@ -1,6 +1,444 @@
 #include "kernels.h"
 
 
+
+
+
+
+
+
+
+arm_status inner_fp32_2x8x2_test(
+  const arm_matrix_instance_f32 * pSrcA,
+  const arm_matrix_instance_f32 * pSrcB,
+        arm_matrix_instance_f32 * pDst,
+        float* tmp_arr, int throttle)
+{
+  float32_t *A = pSrcA->pData;                /* Input data matrix pointer A */
+  float32_t *B = pSrcB->pData;                /* Input data matrix pointer B */
+  float32_t *C = pDst->pData;                 /* Output data matrix pointer */
+  float32_t *A1, *A2, *B1, *B2, *C00, *C01, *C10, *C11;    
+  uint16_t M = pSrcA->numRows;            /* Number of rows of input matrix A */
+  uint16_t N = pSrcB->numCols;            /* Number of columns of input matrix B */
+  uint16_t K = pSrcA->numCols;            /* Number of columns of input matrix A */
+  uint32_t i, j, k, C_ind = 0U;  /* Loop counters */
+  arm_status status;                             /* Status of matrix multiplication */
+
+  float32_t *A_ptr1 = pSrcA->pData;                /* Input data matrix pointer A */
+  float32_t *A_ptr2 = pSrcA->pData + K;                /* Input data matrix pointer A */
+
+  float32_t sum1, sum2, sum3, sum4;                                 /* Accumulators */
+
+
+
+
+  float tmp_cnt;
+  int cntr = 0;
+
+
+  /* The following loop performs the dot-product of each row in pSrcA with each column in pSrcB */
+  /* row loop */
+  for(i = 0U; i < M/2; i++) {
+    /* Output pointer is set to starting address of row being processed */
+    C00 = pDst->pData + C_ind;
+    C01 = C00 + 1;
+    C10 = C00 + N;
+    C11 = C10 + 1;
+
+    /* For every row wise process, B pointer is set to starting address of pSrcB data */
+    B1 = pSrcB->pData;
+    B2 = pSrcB->pData + 1;
+
+    /* column loop */
+    for(j = 0U; j < N/2; j++) {
+
+      /* Set the variable sum, that acts as accumulator, to zero */
+      sum1 = 0.0f;
+      sum2 = 0.0f;
+      sum3 = 0.0f;
+      sum4 = 0.0f;
+
+      /* Initialize pointer A to point to starting address of column being processed */
+      A1 = A_ptr1;
+      A2 = A_ptr2;
+
+      /* Loop unrolling: Compute 8 MACs at a time. */
+      k = K >> 3;
+
+      /* matrix multiplication */
+      while (k > 0U)
+      {
+        /* c(m,p) = a(m,1) * b(1,p) + a(m,2) * b(2,p) + .... + a(m,n) * b(n,p) */
+
+        /* Perform the multiply-accumulates */
+
+
+
+        
+        
+        
+
+        sum1 += *A1 * *B1;
+        B1 += N;
+
+        sum2 += *A1++ * *B2;
+        B2 += N;
+
+
+        sum1 += *A1 * *B1;
+        B1 += N;
+
+        sum2 += *A1++ * *B2;
+        B2 += N;
+
+
+        sum1 += *A1 * *B1;
+        B1 += N;
+
+        sum2 += *A1++ * *B2;
+        B2 += N;
+
+
+        sum1 += *A1 * *B1;
+        B1 += N;
+
+        sum2 += *A1++ * *B2;
+        B2 += N;
+
+
+        
+        
+        
+
+        sum1 += *A1 * *B1;
+        B1 += N;
+
+        sum2 += *A1++ * *B2;
+        B2 += N;
+
+
+        sum1 += *A1 * *B1;
+        B1 += N;
+
+        sum2 += *A1++ * *B2;
+        B2 += N;
+
+
+        sum1 += *A1 * *B1;
+        B1 += N;
+
+        sum2 += *A1++ * *B2;
+        B2 += N;
+
+
+        sum1 += *A1 * *B1;
+        B1 -= 7*N ;
+
+        sum2 += *A1++ * *B2;
+        B2 -= 7*N ;
+
+
+        
+        
+        
+
+
+        sum3 += *A2 * *B1;
+        B1 += N;
+
+        sum4 += *A2++ * *B2;
+        B2 += N;
+
+
+        sum3 += *A2 * *B1;
+        B1 += N;
+
+        sum4 += *A2++ * *B2;
+        B2 += N;
+
+
+        sum3 += *A2 * *B1;
+        B1 += N;
+
+        sum4 += *A2++ * *B2;
+        B2 += N;
+
+
+        sum3 += *A2 * *B1;
+        B1 += N;
+
+        sum4 += *A2++ * *B2;
+        B2 += N;
+
+
+        sum3 += *A2 * *B1;
+        B1 += N;
+
+        sum4 += *A2++ * *B2;
+        B2 += N;
+
+
+        
+        
+        
+
+        sum3 += *A2 * *B1;
+        B1 += N;
+
+        sum4 += *A2++ * *B2;
+        B2 += N;
+
+
+        sum3 += *A2 * *B1;
+        B1 += N;
+
+        sum4 += *A2++ * *B2;
+        B2 += N;
+
+
+        sum3 += *A2 * *B1;
+        B1 += N;
+
+        sum4 += *A2++ * *B2;
+        B2 += N;
+
+        for(int x = 0; x < 32*throttle; x++) {
+          tmp_arr[cntr++ % 1000] = cntr;
+        }
+
+
+        /* Decrement loop counter */
+        k--;
+      }
+
+      // /* Loop unrolling: Compute remaining MACs */
+      // k = K % 4U;
+
+
+      // while (k > 0U)
+      // {
+      //    // c(m,p) = a(m,1) * b(1,p) + a(m,2) * b(2,p) + .... + a(m,n) * b(n,p) 
+
+      //   /* Perform the multiply-accumulates */
+      //   sum += *A++ * *B;
+      //   B += N;
+
+      //   /* Decrement loop counter */
+      //   k--;
+      // }
+
+      /* Store result in destination buffer */
+      // *C00++ = sum;
+      *C00 = sum1;
+      *C01 = sum2;
+      *C10 = sum3;
+      *C11 = sum4;
+
+      // for(int x = 0; x < 4*throttle; x++) {
+      //   tmp_arr[cntr++ % 1000] = rand();
+      // }
+      
+      C00 += 2;
+      C01 += 2;
+      C10 += 2;
+      C11 += 2; 
+
+      /* Update pointer B to point to starting address of next column */
+      B1 = pSrcB->pData + 2*(j+1);
+      B2 = B1 + 1;
+    }
+
+    /* Update pointer A_ptr1 to point to starting address of next row */
+    C_ind = C_ind + 2*N;
+    A_ptr1 = A_ptr1 + 2*K;
+    A_ptr2 = A_ptr2 + 2*K;
+  }
+
+  /* Set status as ARM_MATH_SUCCESS */
+  status = ARM_MATH_SUCCESS;
+
+
+  /* Return to application */
+  return (status);
+}
+
+
+
+
+
+
+arm_status inner_fp32_1x16x1_test(
+  const arm_matrix_instance_f32 * pSrcA,
+  const arm_matrix_instance_f32 * pSrcB,
+        arm_matrix_instance_f32 * pDst,
+        float* tmp_arr)
+{
+  float32_t *A = pSrcA->pData;                /* Input data matrix pointer A */
+  float32_t *B = pSrcB->pData;                /* Input data matrix pointer B */
+  float32_t *A_ptr = pSrcA->pData;                /* Input data matrix pointer A */
+  float32_t *B_ptr = pSrcB->pData;                /* Input data matrix pointer B */
+  float32_t *C = pDst->pData;                 /* Output data matrix pointer */
+  float32_t *C_curr;                                 /* Temporary output data matrix pointer */
+  float32_t sum;                                 /* Accumulator */
+  uint16_t M = pSrcA->numRows;            /* Number of rows of input matrix A */
+  uint16_t N = pSrcB->numCols;            /* Number of columns of input matrix B */
+  uint16_t K = pSrcA->numCols;            /* Number of columns of input matrix A */
+  uint32_t i, j, k, C_ind = 0U;  /* Loop counters */
+  arm_status status;                             /* Status of matrix multiplication */
+
+
+
+  float tmp_cnt;
+  int cntr = 0;
+
+
+  /* The following loop performs the dot-product of each row in pSrcA with each column in pSrcB */
+  /* row loop */
+  for(i = M; i > 0U; i--) {
+    /* Output pointer is set to starting address of row being processed */
+    C_curr = C + C_ind;
+
+    /* For every row wise process, B pointer is set to starting address of pSrcB data */
+    B = pSrcB->pData;
+
+    /* column loop */
+    for(j = N; j > 0U; j--) {
+
+      /* Set the variable sum, that acts as accumulator, to zero */
+      sum = 0.0f;
+
+      /* Initialize pointer A to point to starting address of column being processed */
+      A = A_ptr;
+
+
+      /* Loop unrolling: Compute 8 MACs at a time. */
+      k = K >> 4;
+
+      /* matrix multiplication */
+      while (k > 0U)
+      {
+        /* c(m,p) = a(m,1) * b(1,p) + a(m,2) * b(2,p) + .... + a(m,n) * b(n,p) */
+
+        /* Perform the multiply-accumulates */
+        sum += *A++ * *B;
+        B += N;
+
+        sum += *A++ * *B;
+        B += N;
+
+        sum += *A++ * *B;
+        B += N;
+
+        sum += *A++ * *B;
+        B += N;
+
+
+        
+        
+        
+
+        sum += *A++ * *B;
+        B += N;
+
+        sum += *A++ * *B;
+        B += N;
+
+        sum += *A++ * *B;
+        B += N;
+
+        sum += *A++ * *B;
+        B += N;
+
+
+        
+        
+        
+
+        sum += *A++ * *B;
+        B += N;
+
+        sum += *A++ * *B;
+        B += N;
+
+        sum += *A++ * *B;
+        B += N;
+
+        sum += *A++ * *B;
+        B += N;
+
+
+
+        
+        
+        
+
+        sum += *A++ * *B;
+        B += N;
+
+        sum += *A++ * *B;
+        B += N;
+
+        sum += *A++ * *B;
+        B += N;
+
+        sum += *A++ * *B;
+        B += N;
+
+
+
+        
+        
+        
+
+
+        /* Decrement loop counter */
+        k--;
+      }
+
+      /* Loop unrolling: Compute remaining MACs */
+      k = K % 16U;
+
+
+      while (k > 0U)
+      {
+        /* c(m,p) = a(m,1) * b(1,p) + a(m,2) * b(2,p) + .... + a(m,n) * b(n,p) */
+
+        /* Perform the multiply-accumulates */
+        sum += *A++ * *B;
+        B += N;
+
+        /* Decrement loop counter */
+        k--;
+      }
+
+      /* Store result in destination buffer */
+      *C_curr++ = sum;
+
+      /* Update pointer B to point to starting address of next column */
+      B = B_ptr + (N - j + 1);
+
+    }
+
+    /* Update pointer A_ptr to point to starting address of next row */
+    C_ind = C_ind + N;
+    A_ptr = A_ptr + K;
+  }
+
+  /* Set status as ARM_MATH_SUCCESS */
+  status = ARM_MATH_SUCCESS;
+
+
+  /* Return to application */
+  return (status);
+}
+
+
+
+
+
+
+
+
 arm_status inner_fp32_2x4x2(
   const arm_matrix_instance_f32 * pSrcA,
   const arm_matrix_instance_f32 * pSrcB,
@@ -344,21 +782,26 @@ arm_status inner_fp32_2x8x2(
         k--;
       }
 
-      // /* Loop unrolling: Compute remaining MACs */
-      // k = K % 4U;
+      /* Loop unrolling: Compute remaining MACs */
+      k = K % 8U;
 
 
-      // while (k > 0U)
-      // {
-      //    // c(m,p) = a(m,1) * b(1,p) + a(m,2) * b(2,p) + .... + a(m,n) * b(n,p) 
+      while (k > 0U)
+      {
 
-      //   /* Perform the multiply-accumulates */
-      //   sum += *A++ * *B;
-      //   B += N;
+        /* Perform the multiply-accumulates */
 
-      //   /* Decrement loop counter */
-      //   k--;
-      // }
+        sum1 += *A1 * *B1;
+        sum2 += *A1++ * *B2;
+        sum3 += *A2 * *B1;
+        sum4 += *A2++ * *B2;
+
+        B1 += N;
+        B2 += N;
+
+        /* Decrement loop counter */
+        k--;
+      }
 
       /* Store result in destination buffer */
       // *C00++ = sum;
