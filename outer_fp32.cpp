@@ -584,7 +584,7 @@ arm_status outer_fp32_5x5(
   float32_t C00, C01, C02, C03, C04,
   C10, C11, C12, C13, C14, C20, C21, 
   C22, C23, C24, C30, C31, C32, C33, 
-  C34, C40, C41, C42, C43, C44;    /* Temporary output data  */
+  C34, C40, C41, C42, C43, C44;     /* Temporary output data  */
   uint16_t M = pSrcA->numRows;            /* Number of rows of input matrix A */
   uint16_t N = pSrcB->numCols;            /* Number of columns of input matrix B */
   uint16_t K = pSrcA->numCols;            /* Number of columns of input matrix A */
