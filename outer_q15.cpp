@@ -752,3 +752,196 @@ arm_status outer_q15_4x2(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+arm_status outer_q15_1x4x3(
+  const arm_matrix_instance_q15 * pSrcA,
+  const arm_matrix_instance_q15 * pSrcB,
+        arm_matrix_instance_q15 * pDst,
+        q15_t                   * pState)
+{
+        q15_t *pSrcBT = pState;                        /* Input data matrix pointer for transpose */
+        q15_t *A = pSrcA->pData;                    /* Input data matrix pointer A of Q15 type */
+        q15_t *B = pSrcB->pData;                    /* Input data matrix pointer B of Q15 type */
+        q15_t *px;                                     /* Temporary output data matrix pointer */
+        uint16_t M = pSrcA->numRows;            /* Number of rows of input matrix A */
+        uint16_t N = pSrcB->numCols;            /* Number of columns of input matrix B */
+        uint16_t K = pSrcA->numCols;            /* Number of columns of input matrix A */
+        uint32_t em,ek,en,col, i = 0U, row = K;  /* Loop counters */
+        arm_status status;                             /* Status of matrix multiplication */
+
+        int m,n,k;
+        q31_t in;                                      /* Temporary variable to hold the input value */
+        q31_t inA00, inA01,
+          inB00, inB01, inB10, inB11, inB20, inB21;
+        q15_t *A0, 
+        *B0, *B1, *B2, *C, *C_ptr;
+        q31_t C00, C01, C02;                         /* Accumulator */
+
+  {
+    /* Matrix transpose */
+    do
+    {
+      /* The pointer px is set to starting address of column being processed */
+      px = pSrcBT + i;
+
+      /* Apply loop unrolling and exchange columns with row elements */
+      col = N >> 2U;
+
+      /* First part of the processing with loop unrolling.  Compute 4 outputs at a time.
+       ** a second loop below computes the remaining 1 to 3 samples. */
+      while (col > 0U)
+      {
+
+        /* Read two elements from row */
+        in = read_q15x2_ia ((q15_t **) &B);
+
+        /* Unpack and store one element in destination */
+#ifndef ARM_MATH_BIG_ENDIAN
+        *px = (q15_t) in;
+#else
+        *px = (q15_t) ((in & (q31_t) 0xffff0000) >> 16);
+#endif /* #ifndef ARM_MATH_BIG_ENDIAN */
+
+        /* Update pointer px to point to next row of transposed matrix */
+        px += K;
+
+        /* Unpack and store second element in destination */
+#ifndef ARM_MATH_BIG_ENDIAN
+        *px = (q15_t) ((in & (q31_t) 0xffff0000) >> 16);
+#else
+        *px = (q15_t) in;
+#endif /* #ifndef ARM_MATH_BIG_ENDIAN */
+
+        /* Update pointer px to point to next row of transposed matrix */
+        px += K;
+
+        in = read_q15x2_ia ((q15_t **) &B);
+#ifndef ARM_MATH_BIG_ENDIAN
+        *px = (q15_t) in;
+#else
+        *px = (q15_t) ((in & (q31_t) 0xffff0000) >> 16);
+#endif /* #ifndef ARM_MATH_BIG_ENDIAN */
+        px += K;
+
+#ifndef ARM_MATH_BIG_ENDIAN
+        *px = (q15_t) ((in & (q31_t) 0xffff0000) >> 16);
+#else
+        *px = (q15_t) in;
+#endif /* #ifndef ARM_MATH_BIG_ENDIAN */
+        px += K;
+
+        /* Decrement column loop counter */
+        col--;
+      }
+
+      /* If the columns of pSrcB is not a multiple of 4, compute any remaining output samples here.
+       ** No loop unrolling is used. */
+      col = N % 0x4U;
+
+      while (col > 0U)
+      {
+        /* Read and store input element in destination */
+        *px = *B++;
+
+        /* Update pointer px to point to next row of transposed matrix */
+        px += K;
+
+        /* Decrement column loop counter */
+        col--;
+      }
+
+      i++;
+
+      /* Decrement row loop counter */
+      row--;
+
+    } while (row > 0U);
+
+
+
+
+
+    C = pDst->pData;
+    // C01 = C + N;
+    // C02 = C01 + N;
+    // C4 = C02 + N;
+
+    em = M / 1;
+    ek = K / 4;
+    en = N / 3;
+
+    for(n = 0U; n < en; n++) {
+
+      B0 = pSrcBT + 3*n*K;
+      B1 = B0 + K;
+      B2 = B1 + K;
+
+      C_ptr = pDst->pData + 3*n;
+
+      for(k = 0U; k < ek; k++) {
+      
+        A0 = pSrcA->pData + 4*k;
+        // A1 = A0 + K;
+        // A2 = A1 + K;
+        // A3 = A2 + K;
+
+        inB00 = read_q15x2_ia ((q15_t **) &B0);
+        inB01 = read_q15x2_ia ((q15_t **) &B0);
+
+        inB10 = read_q15x2_ia ((q15_t **) &B1);
+        inB11 = read_q15x2_ia ((q15_t **) &B1);
+
+        inB20 = read_q15x2_ia ((q15_t **) &B2);
+        inB21 = read_q15x2_ia ((q15_t **) &B2);
+
+        C = C_ptr;
+
+        for(m = 0; m < em; m++) {
+
+          C00 = (q31_t) (*C++ << 15);
+          C01 = (q31_t) (*C++ << 15);
+          C02 = (q31_t) (*C << 15);
+
+          inA00 = read_q15x2_ia ((q15_t **) &A0);
+          inA01 = read_q15x2_ia ((q15_t **) &A0);
+
+          /* Multiply and Accumulates */
+          C00  = __SMLAD(inA00, inB00, C00);
+          C00 = __SMLAD(inA01, inB01, C00);
+
+          C01  = __SMLAD(inA00, inB10, C01);
+          C01 = __SMLAD(inA01, inB11, C01);
+
+          C02  = __SMLAD(inA00, inB20, C02);
+          C02 = __SMLAD(inA01, inB21, C02);
+
+          *C--  = (q15_t) (C00 >> 15);
+          *C--  = (q15_t) (C01 >> 15);
+          *C  = (q15_t) (C02 >> 15);
+
+          A0 += K - 4;
+          C += N;
+        }
+      }
+    }
+
+    /* Set status as ARM_MATH_SUCCESS */
+    status = ARM_MATH_SUCCESS;
+  }
+
+  /* Return to application */
+  return (status);
+}
