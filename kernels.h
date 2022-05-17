@@ -92,6 +92,35 @@ arm_status outer_fp32_6x5_m_first(
   const arm_matrix_instance_f32 * pSrcB,
         arm_matrix_instance_f32 * pDst);
 
+arm_status outer_fp32_5x5_k_first_old(
+  const arm_matrix_instance_f32 * pSrcA,
+  const arm_matrix_instance_f32 * pSrcB,
+        arm_matrix_instance_f32 * pDst);
+
+arm_status outer_q15_1x4x3(
+  const arm_matrix_instance_q15 * pSrcA,
+  const arm_matrix_instance_q15 * pSrcB,
+        arm_matrix_instance_q15 * pDst,
+        q15_t                   * pState);
+
+
+arm_status outer_q31_5x5_k_first(
+   int* pSrcA,
+   int* pSrcB,
+        int* pDst, int M, int K, int N);
+
+void print_mat_q31(arm_matrix_instance_q31* mat, int rows, int cols) ;
+bool q31_gemm_checker(int32_t* C, int32_t* C_check, int N, int M, int K) ;
+void rand_init_int32(int32_t* mat, int r, int c) ;
+void testing_q31() ;
+void print_mat_int(int* mat, int rows, int cols) ;
+
+
+
+
+
+
+
 
 
 arm_status inner_fp32_1x4x1(
@@ -149,10 +178,22 @@ arm_status outer_fp32_5x5_old(
   const arm_matrix_instance_f32 * pSrcB,
         arm_matrix_instance_f32 * pDst);
 
-arm_status outer_fp32_5x5(
+arm_status outer_fp32_5x5_k_first(
   const arm_matrix_instance_f32 * pSrcA,
   const arm_matrix_instance_f32 * pSrcB,
         arm_matrix_instance_f32 * pDst);
+
+arm_status outer_fp32_5x5_n_first(
+  const arm_matrix_instance_f32 * pSrcA,
+  const arm_matrix_instance_f32 * pSrcB,
+        arm_matrix_instance_f32 * pDst);
+
+
+arm_status outer_fp32_1x6x4_m_first(
+  const arm_matrix_instance_f32 * pSrcA,
+  const arm_matrix_instance_f32 * pSrcB,
+        arm_matrix_instance_f32 * pDst);
+
 
 arm_status outer_fp32_6x6(
   const arm_matrix_instance_f32 * pSrcA,

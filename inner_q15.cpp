@@ -788,6 +788,3 @@ arm_status dsp_test(
   /* Return to application */
   return (status);
 }
-
-
-

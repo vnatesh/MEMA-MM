@@ -13,6 +13,17 @@ void rand_init(float* mat, int r, int c) {
 }
 
 
+void rand_init_int32(int32_t* mat, int r, int c) {
+    // int MAX = 65536;
+    for(int i = 0; i < r*c; i++) {
+        // mat[i] = (double) i;
+        // mat[i] = 1.0;
+        // mat[i] =  (double) (i%MAX);
+        mat[i] = (int) (((float) rand() / RAND_MAX*2.0 - 1.0) * 128);
+    }   
+}
+
+
 // randomized sparse matrix with sparsity % of values that are zero
 // threshold pruning
 void rand_sparse(float* mat, int r, int c, float sparsity) {
@@ -154,6 +165,56 @@ bool q15_gemm_checker(int16_t* C, int16_t* C_check, int N, int M, int K) {
 
 
 
+
+bool q31_gemm_checker(int32_t* C, int32_t* C_check, int N, int M, int K) {
+
+  int CORRECT = 1;
+  int cnt = 0;
+  int ind1 = 0;
+
+  for(int m = 0; m < M; m++) {
+      for(int n = 0; n < N; n++) {
+          if(C[ind1] != C_check[ind1]) {
+              cnt++;
+              CORRECT = 0;
+          }
+
+          if(CHECK_PRINT) printf("%d\t%d\n", C_check[ind1], C[ind1]);
+          ind1++; 
+        }
+    }
+
+  if(CORRECT) {
+    Serial.println("CORRECT!");
+    return 0;
+  } else {
+    Serial.println("WRONG!");
+    // Serial.println("%d\n", cnt);
+    return 1;
+  }
+
+
+}
+
+
+
+void print_mat_q31(arm_matrix_instance_q31* mat, int rows, int cols) {
+
+  char buffer[100];
+
+  for(int i = 0; i < rows; i++) {
+    for(int j = 0; j < cols; j++) {
+      sprintf(buffer, "%d ", mat->pData[i*cols + j]);
+      Serial.print(buffer);
+    }
+    Serial.println("");
+  }
+  Serial.println("");
+
+}
+
+
+
 void print_mat_q15(arm_matrix_instance_q15* mat, int rows, int cols) {
 
   char buffer[100];
@@ -169,6 +230,20 @@ void print_mat_q15(arm_matrix_instance_q15* mat, int rows, int cols) {
 
 }
 
+void print_mat_int(int* mat, int rows, int cols) {
+
+  char buffer[100];
+
+  for(int i = 0; i < rows; i++) {
+    for(int j = 0; j < cols; j++) {
+      sprintf(buffer, "%d ", mat[i*cols + j]);
+      Serial.print(buffer);
+    }
+    Serial.println("");
+  }
+  Serial.println("");
+
+}
 
 void rand_init_q15(int16_t* mat, int r, int c) {
     // int MAX = 65536;
