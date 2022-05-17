@@ -1,68 +1,121 @@
 
+x = 0
+LM = 25600
+for i in range(1,LM+1):
+  for j in range(1,LM+1):
+    mem = i+j+i*j
+    if mem < 25600:
+      x+=1
+      # print (i,j)
 
 
 
-def gen_m_leftover_k(m,n):
+# def gen_n_leftover_k(off,M,N,m,n):
+#   n_left = '''
+#     if(n_left) {
+#       A_ptr = pSrcA->pData + %s*%d*K;
+#       B_ptr = pSrcB->pData + %d*en;
+#       int tmp_ind = %d*%s*N + %d*en; 
+#       ''' % (off,M,N,M,off,N)
+#   #
+#   xl = []
+#   for ns in range(1,n):
+#     x = '''
+#       if(n_left == %d) {
+#       ''' % ns
+#     x += gen_c_load(m,ns)
+#     x += '''
+#         for(int kk = 0U; kk < K; kk++) {
+#           A = A_ptr + kk ;
+#           B = B_ptr + kk*N;
+#           C_curr = pDst->pData + tmp_ind;
+#     '''
+#     x += gen_mac_ops_k(m,ns)
+#     x += gen_c_write_k(m,ns)
+#     xl.append(x)
+#   return n_left + 'else '.join(xl) + '''
+#     }
+#     '''
+
+
+# def gen_m_leftover_k(m,n):
+#   m_left = '''
+#   if(m_left) {
+#     C_ind = em*%d*N; 
+#       ''' % (m)
+#   #
+#   xl = []
+#   for ms in range(1,m):
+#     x = '''
+#     if(m_left == %d) {
+#       ''' % ms
+#     x += '''
+#       for(n = 0U; n < en; n++) {
+#       '''
+#     x += gen_c_load(ms,n) + '''
+#         B_ptr = pSrcB->pData + %d*n;\n''' % n
+#     x += '''
+#         for(k = 0U; k < K; k++) {
+
+#           A = A_ptr + k ;
+#           B = B_ptr + k*N;
+#         '''
+#     x += gen_mac_ops_k(ms,n)
+#     x += gen_c_write_k(ms,n)
+#     x += gen_n_leftover_k('em',m,n,ms,n)
+#     xl.append(x)
+#   return m_left + '} else '.join(xl) + '''
+#     }
+#   }
+#     '''
+
+
+
+def gen_m_leftover_k(m,n,ms,ns):
   m_left = '''
-  if(m_left) {
-    C_ind = em*%d*N; 
+  C_ind = em*%d*N; 
       ''' % (m)
   #
-  xl = []
-  for ms in range(1,m):
-    x = '''
-    if(m_left == %d) {
-      ''' % ms
-    x += '''
-      for(n = 0U; n < en; n++) {
-      '''
-    x += gen_c_load(ms,n) + '''
-        B_ptr = pSrcB->pData + %d*n;\n''' % n
-    x += '''
-        for(k = 0U; k < K; k++) {
-
-          A = A_ptr + k ;
-          B = B_ptr + k*N;
-        '''
-    x += gen_mac_ops_k(ms,n)
-    x += gen_c_write_k(ms,n)
-    x += gen_n_leftover_k('em',m,n,ms,n)
-    xl.append(x)
-  return m_left + '} else '.join(xl) + '''
-    }
-  }
+  x = '''
+  for(n = 0U; n < en; n++) {
     '''
+  x += gen_c_load(ms,n) + '''
+    B_ptr = pSrcB->pData + %d*n;\n''' % n
+  x += '''
+    for(k = 0U; k < K; k++) {
+
+      A = A_ptr + k ;
+      B = B_ptr + k*N;
+      '''
+  x += gen_mac_ops_k(ms,n)
+  x += gen_c_write_k(ms,n) + '''
+  }
+  '''
+  x += gen_n_leftover_k('em',m,n,ms,ns)
+  return m_left + x
 
 
-
-
-
-def gen_n_leftover_k(off,M,N,m,n):
+def gen_n_leftover_k(off,m_max,n_max,m,ns):
   n_left = '''
-    if(n_left) {
       A_ptr = pSrcA->pData + %s*%d*K;
       B_ptr = pSrcB->pData + %d*en;
       int tmp_ind = %d*%s*N + %d*en; 
-      ''' % (off,M,N,M,off,N)
+      ''' % (off,m_max,n_max,m_max,off,n_max)
   #
-  xl = []
-  for ns in range(1,n):
-    x = '''
-      if(n_left == %d) {
-      ''' % ns
-    x += gen_c_load(m,ns)
-    x += '''
-        for(int kk = 0U; kk < K; kk++) {
-          A = A_ptr + kk ;
-          B = B_ptr + kk*N;
-          C_curr = pDst->pData + tmp_ind;
-    '''
-    x += gen_mac_ops_k(m,ns)
-    x += gen_c_write_k(m,ns)
-    xl.append(x)
-  return n_left + 'else '.join(xl) + '''
-    }
-    '''
+  ns = N % n_max;
+  x = gen_c_load(m,ns)
+  x += '''
+      for(int kk = 0U; kk < K; kk++) {
+        A = A_ptr + kk ;
+        B = B_ptr + kk*N;
+        C_curr = pDst->pData + tmp_ind;
+  '''
+  x += gen_mac_ops_k(m,ns)
+  x += gen_c_write_k(m,ns)
+  return n_left + x
+
+
+# gen_n_leftover_k('m',5,5,5,3)
 
 
 def gen_mac_ops_k(m,n):
@@ -114,15 +167,19 @@ def gen_c_write_k(m,n):
   for j in range(n-1):
     C_write += '''
       *C_curr++ = C%d%d;''' % (m-1,j)
+  # C_write += '''
+  #     *C_curr = C%d%d;
+  #     C_ind += %d;
+  #   }
+  #   ''' % (m-1,n-1,n)
   C_write += '''
       *C_curr = C%d%d;
       C_ind += %d;
-    }
     ''' % (m-1,n-1,n)
   return C_write
 
 
-def get_func_def(m,k,n,sched):
+def gen_func_def(m,k,n,sched):
   return '''
 arm_status outer_fp32_%dx%dx%d_%s_first(
   const arm_matrix_instance_f32 * pSrcA,
@@ -133,7 +190,7 @@ arm_status outer_fp32_%dx%dx%d_%s_first(
   #
   #
 
-def get_var_decls():
+def gen_var_decls():
   return '''  
   float32_t *A = pSrcA->pData; 
   float32_t *B = pSrcB->pData;  
@@ -145,7 +202,7 @@ def get_var_decls():
   arm_status status;                             /* Status of matrix multiplication */
   '''
 
-def get_end():
+def gen_end():
   return '''
 
   /* Set status as ARM_MATH_SUCCESS */
@@ -163,11 +220,11 @@ def gen_mema_kernel(m,k,n,sched):
   gen_k_first(m,k,n,sched)
 
 
-def gen_k_first(m,k,n,sched):
+def gen_k_first(M,K,N,m,k,n,sched):
   #
-  func_def = get_func_def(m,k,n,sched)
-  var_decls = get_var_decls()
-  end = get_end()
+  func_def = gen_func_def(m,k,n,sched)
+  var_decls = gen_var_decls()
+  end = gen_end()
   var_decls += '''
   uint32_t C_ind = 0U;
   float32_t *A_ptr = pSrcA->pData;                /* Input data matrix pointer A */
@@ -209,9 +266,13 @@ def gen_k_first(m,k,n,sched):
   #
   #
   mac_ops = gen_mac_ops_k(m,n)
-  C_write = gen_c_write_k(m,n)
+  C_write = gen_c_write_k(m,n) + '''
+  }
+  '''
+  # n_left = gen_n_leftover_k('m',m,n,m,n)
+  # m_left = gen_m_leftover_k(m,n)
   n_left = gen_n_leftover_k('m',m,n,m,n)
-  m_left = gen_m_leftover_k(m,n)
+  m_left = gen_m_leftover_k(m,n,M % m, N % n)
   #
   mm_sched += mac_ops + C_write + n_left + '''
     A_ptr += %d*K;
@@ -221,7 +282,9 @@ def gen_k_first(m,k,n,sched):
   print(prog)
 
 
-gen_k_first(5,1,5,'k')
+# gen_k_first(5,1,5,'k')
+M = N = K = 22
+gen_k_first(M,K,N,5,1,5,'k')
 
 
 
@@ -230,9 +293,9 @@ gen_k_first(5,1,5,'k')
 
 def gen_m_first(m,k,n,sched):
   #
-  func_def = get_func_def(m,k,n,sched)
-  var_decls = get_var_decls()
-  end = get_end()
+  func_def = gen_func_def(m,k,n,sched)
+  var_decls = gen_var_decls()
+  end = gen_end()
   #
   var_decls += '''
   float32_t *A_ptr, *C_ptr;
