@@ -573,7 +573,584 @@ arm_status outer_fp32_4x4_m_first(
 
 
 
-arm_status outer_fp32_5x5(
+
+
+
+// arm_status outer_fp32_5x5_k_first(
+//   const arm_matrix_instance_f32 * pSrcA,
+//   const arm_matrix_instance_f32 * pSrcB,
+//         arm_matrix_instance_f32 * pDst) 
+// {
+    
+//   float32_t *A = pSrcA->pData; 
+//   float32_t *B = pSrcB->pData;  
+//   float32_t *C = pDst->pData; 
+//   uint16_t M = pSrcA->numRows;            /* Number of rows of input matrix A */
+//   uint16_t N = pSrcB->numCols;            /* Number of columns of input matrix B */
+//   uint16_t K = pSrcA->numCols;            /* Number of columns of input matrix A */
+//   uint32_t m, n, k;  /* Loop counters */
+//   arm_status status;                             /* Status of matrix multiplication */
+  
+//   uint32_t C_ind = 0U;
+//   float32_t *A_ptr = pSrcA->pData;                /* Input data matrix pointer A */
+//   float32_t *B_ptr, *C_curr;
+   
+//   float32_t C00,C01,C02,C03,C04,C10,C11,C12,C13,C14,C20,C21,C22,C23,C24,C30,C31,C32,C33,C34,C40,C41,C42,C43,C44;
+
+//   uint32_t en = N / 5;
+//   uint32_t em = M / 5;
+
+//   uint32_t n_left = N % 5;
+//   uint32_t m_left = M % 5;
+  
+//   for(m = 0U; m < em; m++) {
+
+//     C_ind = m*5*N;
+
+//     for(n = 0U; n < en; n++) {
+  
+//       C00 = 0;
+//       C01 = 0;
+//       C02 = 0;
+//       C03 = 0;
+//       C04 = 0;
+      
+//       C10 = 0;
+//       C11 = 0;
+//       C12 = 0;
+//       C13 = 0;
+//       C14 = 0;
+      
+//       C20 = 0;
+//       C21 = 0;
+//       C22 = 0;
+//       C23 = 0;
+//       C24 = 0;
+      
+//       C30 = 0;
+//       C31 = 0;
+//       C32 = 0;
+//       C33 = 0;
+//       C34 = 0;
+      
+//       C40 = 0;
+//       C41 = 0;
+//       C42 = 0;
+//       C43 = 0;
+//       C44 = 0;
+      
+//       B_ptr = pSrcB->pData + 5*n;
+
+//       for(k = 0U; k < K; k++) {
+
+//         A = A_ptr + k ;
+//         B = B_ptr + k*N;
+        
+//         C00 += *A * *B++;
+//         C01 += *A * *B++;
+//         C02 += *A * *B++;
+//         C03 += *A * *B++;
+//         C04 += *A * *B;
+
+//         B -= 4;
+//         A += K;
+        
+//         C10 += *A * *B++;
+//         C11 += *A * *B++;
+//         C12 += *A * *B++;
+//         C13 += *A * *B++;
+//         C14 += *A * *B;
+
+//         B -= 4;
+//         A += K;
+        
+//         C20 += *A * *B++;
+//         C21 += *A * *B++;
+//         C22 += *A * *B++;
+//         C23 += *A * *B++;
+//         C24 += *A * *B;
+
+//         B -= 4;
+//         A += K;
+        
+//         C30 += *A * *B++;
+//         C31 += *A * *B++;
+//         C32 += *A * *B++;
+//         C33 += *A * *B++;
+//         C34 += *A * *B;
+
+//         B -= 4;
+//         A += K;
+        
+//         C40 += *A * *B++;
+//         C41 += *A * *B++;
+//         C42 += *A * *B++;
+//         C43 += *A * *B++;
+//         C44 += *A * *B;
+//       }
+      
+//       C_curr = pDst->pData + C_ind;
+      
+//       *C_curr++ = C00;
+//       *C_curr++ = C01;
+//       *C_curr++ = C02;
+//       *C_curr++ = C03;
+//       *C_curr = C04;
+//       C_curr = C_curr - 4 + N;
+      
+//       *C_curr++ = C10;
+//       *C_curr++ = C11;
+//       *C_curr++ = C12;
+//       *C_curr++ = C13;
+//       *C_curr = C14;
+//       C_curr = C_curr - 4 + N;
+      
+//       *C_curr++ = C20;
+//       *C_curr++ = C21;
+//       *C_curr++ = C22;
+//       *C_curr++ = C23;
+//       *C_curr = C24;
+//       C_curr = C_curr - 4 + N;
+      
+//       *C_curr++ = C30;
+//       *C_curr++ = C31;
+//       *C_curr++ = C32;
+//       *C_curr++ = C33;
+//       *C_curr = C34;
+//       C_curr = C_curr - 4 + N;
+      
+//       *C_curr++ = C40;
+//       *C_curr++ = C41;
+//       *C_curr++ = C42;
+//       *C_curr++ = C43;
+//       *C_curr = C44;
+//       C_ind += 5;
+    
+//   }
+  
+//       A_ptr = pSrcA->pData + m*5*K;
+//       B_ptr = pSrcB->pData + 5*en;
+//       int tmp_ind = 5*m*N + 5*en; 
+      
+//       C00 = 0;
+//       C01 = 0;
+      
+//       C10 = 0;
+//       C11 = 0;
+      
+//       C20 = 0;
+//       C21 = 0;
+      
+//       C30 = 0;
+//       C31 = 0;
+      
+//       C40 = 0;
+//       C41 = 0;
+      
+//       for(int kk = 0U; kk < K; kk++) {
+//         A = A_ptr + kk ;
+//         B = B_ptr + kk*N;
+//         C_curr = pDst->pData + tmp_ind;
+  
+//         C00 += *A * *B++;
+//         C01 += *A * *B;
+
+//         B -= 1;
+//         A += K;
+        
+//         C10 += *A * *B++;
+//         C11 += *A * *B;
+
+//         B -= 1;
+//         A += K;
+        
+//         C20 += *A * *B++;
+//         C21 += *A * *B;
+
+//         B -= 1;
+//         A += K;
+        
+//         C30 += *A * *B++;
+//         C31 += *A * *B;
+
+//         B -= 1;
+//         A += K;
+        
+//         C40 += *A * *B++;
+//         C41 += *A * *B;
+//       }
+      
+//       C_curr = pDst->pData + C_ind;
+      
+//       *C_curr++ = C00;
+//       *C_curr = C01;
+//       C_curr = C_curr - 1 + N;
+      
+//       *C_curr++ = C10;
+//       *C_curr = C11;
+//       C_curr = C_curr - 1 + N;
+      
+//       *C_curr++ = C20;
+//       *C_curr = C21;
+//       C_curr = C_curr - 1 + N;
+      
+//       *C_curr++ = C30;
+//       *C_curr = C31;
+//       C_curr = C_curr - 1 + N;
+      
+//       *C_curr++ = C40;
+//       *C_curr = C41;
+//       C_ind += 2;
+    
+//     A_ptr += 5*K;
+//   }
+  
+//   C_ind = em*5*N; 
+      
+//   for(n = 0U; n < en; n++) {
+    
+//       C00 = 0;
+//       C01 = 0;
+//       C02 = 0;
+//       C03 = 0;
+//       C04 = 0;
+      
+//       C10 = 0;
+//       C11 = 0;
+//       C12 = 0;
+//       C13 = 0;
+//       C14 = 0;
+      
+//     B_ptr = pSrcB->pData + 5*n;
+
+//     for(k = 0U; k < K; k++) {
+
+//       A = A_ptr + k ;
+//       B = B_ptr + k*N;
+      
+//         C00 += *A * *B++;
+//         C01 += *A * *B++;
+//         C02 += *A * *B++;
+//         C03 += *A * *B++;
+//         C04 += *A * *B;
+
+//         B -= 4;
+//         A += K;
+        
+//         C10 += *A * *B++;
+//         C11 += *A * *B++;
+//         C12 += *A * *B++;
+//         C13 += *A * *B++;
+//         C14 += *A * *B;
+//       }
+      
+//       C_curr = pDst->pData + C_ind;
+      
+//       *C_curr++ = C00;
+//       *C_curr++ = C01;
+//       *C_curr++ = C02;
+//       *C_curr++ = C03;
+//       *C_curr = C04;
+//       C_curr = C_curr - 4 + N;
+      
+//       *C_curr++ = C10;
+//       *C_curr++ = C11;
+//       *C_curr++ = C12;
+//       *C_curr++ = C13;
+//       *C_curr = C14;
+//       C_ind += 5;
+    
+//   }
+  
+//       A_ptr = pSrcA->pData + em*5*K;
+//       B_ptr = pSrcB->pData + 5*en;
+//       int tmp_ind = 5*em*N + 5*en; 
+      
+//       C00 = 0;
+//       C01 = 0;
+      
+//       C10 = 0;
+//       C11 = 0;
+      
+//       for(int kk = 0U; kk < K; kk++) {
+//         A = A_ptr + kk ;
+//         B = B_ptr + kk*N;
+//         C_curr = pDst->pData + tmp_ind;
+  
+//         C00 += *A * *B++;
+//         C01 += *A * *B;
+
+//         B -= 1;
+//         A += K;
+        
+//         C10 += *A * *B++;
+//         C11 += *A * *B;
+//       }
+      
+//       C_curr = pDst->pData + C_ind;
+      
+//       *C_curr++ = C00;
+//       *C_curr = C01;
+//       C_curr = C_curr - 1 + N;
+      
+//       *C_curr++ = C10;
+//       *C_curr = C11;
+//       C_ind += 2;
+    
+
+//   /* Set status as ARM_MATH_SUCCESS */
+//   status = ARM_MATH_SUCCESS;
+
+
+//   /* Return to application */
+//   return (status);
+// }
+
+
+
+
+
+
+
+
+
+
+arm_status outer_q31_5x5_k_first(
+   int* pSrcA,
+   int* pSrcB,
+        int* pDst, int M, int K, int N)
+{
+  int *A = pSrcA;                /* Input data matrix pointer A */
+  int *B = pSrcB;                /* Input data matrix pointer B */
+  int *C = pDst;                 /* Output data matrix pointer */
+  int C00, C01, C02, C03, C04,
+  C10, C11, C12, C13, C14, C20, C21, 
+  C22, C23, C24, C30, C31, C32, C33, 
+  C34, C40, C41, C42, C43, C44;     /* Temporary output data  */
+  uint32_t m, n, k, C_ind = 0U;  /* Loop counters */
+  arm_status status;                             /* Status of matrix multiplication */
+
+  int *A_ptr = pSrcA;                /* Input data matrix pointer A */
+  int *B_ptr, *C_curr;
+
+  uint32_t en = N / 5;
+  uint32_t em = M / 5;
+  uint32_t n_left = N % 5;
+  uint32_t m_left = M % 5;
+
+  /* The following loop performs the dot-product of each row in pSrcA with each column in pSrcB */
+  /* row loop */
+  for(m = 0U; m < em; m++) {
+    /* Output pointer is set to starting address of row being processed */
+
+    C_ind = m*5*N;
+
+    /* For every row wise process, B pointer is set to starting address of pSrcB data */
+    // B = pSrcB;
+
+    /* column loop */
+    for(n = 0U; n < en; n++) {
+
+      C00 = 0;
+      C01 = 0;
+      C02 = 0;
+      C03 = 0;
+      C04 = 0;
+
+      C10 = 0;
+      C11 = 0;
+      C12 = 0;
+      C13 = 0;
+      C14 = 0;
+
+      C20 = 0;
+      C21 = 0;
+      C22 = 0;
+      C23 = 0;
+      C24 = 0;
+
+      C30 = 0;
+      C31 = 0;
+      C32 = 0;
+      C33 = 0;
+      C34 = 0;
+
+      C40 = 0;
+      C41 = 0;
+      C42 = 0;
+      C43 = 0;
+      C44 = 0;
+
+      /* Update pointer B to point to starting address of next column */
+      B_ptr = pSrcB + 5*n;
+
+      /* matrix multiplication */
+      for(k = 0U; k < K; k++) {
+      
+        A = A_ptr + k ;
+        B = B_ptr + k*N;
+
+        C00 += *A * *B++;
+        C01 += *A * *B++;
+        C02 += *A * *B++;
+        C03 += *A * *B++;
+        C04 += *A * *B;
+
+        B -= 4;
+        A += K;
+
+        C10 += *A * *B++;
+        C11 += *A * *B++;
+        C12 += *A * *B++;
+        C13 += *A * *B++;
+        C14 += *A * *B;
+
+        B -= 4;
+        A += K;
+
+        C20 += *A * *B++;
+        C21 += *A * *B++;
+        C22 += *A * *B++;
+        C23 += *A * *B++;
+        C24 += *A * *B;
+
+        B -= 4;
+        A += K;
+
+        C30 += *A * *B++;
+        C31 += *A * *B++;
+        C32 += *A * *B++;
+        C33 += *A * *B++;
+        C34 += *A * *B;
+
+        B -= 4;
+        A += K;
+
+        C40 += *A * *B++;
+        C41 += *A * *B++;
+        C42 += *A * *B++;
+        C43 += *A * *B++;
+        C44 += *A * *B;
+
+        // B = B - 4 + N;
+
+      }
+
+      /* Store result in destination buffer */
+
+      C_curr = pDst + C_ind;
+
+      *C_curr++ = C00;
+      *C_curr++ = C01;
+      *C_curr++ = C02;
+      *C_curr++ = C03;
+      *C_curr = C04;
+
+      C_curr = C_curr - 4 + N;
+
+      *C_curr++ = C10;
+      *C_curr++ = C11;
+      *C_curr++ = C12;
+      *C_curr++ = C13;
+      *C_curr = C14;
+
+      C_curr = C_curr - 4 + N;
+
+      *C_curr++ = C20;
+      *C_curr++ = C21;
+      *C_curr++ = C22;
+      *C_curr++ = C23;
+      *C_curr = C24;
+
+      C_curr = C_curr - 4 + N;
+
+      *C_curr++ = C30;
+      *C_curr++ = C31;
+      *C_curr++ = C32;
+      *C_curr++ = C33;
+      *C_curr = C34;
+
+      C_curr = C_curr - 4 + N;
+
+      *C_curr++ = C40;
+      *C_curr++ = C41;
+      *C_curr++ = C42;
+      *C_curr++ = C43;
+      *C_curr = C44;
+
+
+      C_ind += 5;
+
+    }
+
+
+    if(n_left) {
+
+      A_ptr = pSrcA + m*5*K;
+      B_ptr = pSrcB + 5*en;
+
+      // int c_tmp[5*n_left];
+
+      // for(int q = 0; q < 5*n_left; q++) {
+      //   c_tmp[q] = 0;
+      // }
+
+      // C_curr = pDst + 5*m*N + 5*en;
+      int tmp_ind = 5*m*N + 5*en; 
+      
+      for(int kk = 0U; kk < K; kk++) {
+        
+        A = A_ptr + kk ;
+        B = B_ptr + kk*N;
+        C_curr = pDst + tmp_ind;
+        
+        for(int mm = 0U; mm < 5; mm++) {
+
+          for(int nn = 0U; nn < n_left-1; nn++) {
+            // c_tmp[mm*n_left + nn] += *A * *B++;
+            *C_curr++ += *A * *B++;
+          }
+
+          // c_tmp[mm*n_left + n_left-1] += *A * *B;
+          *C_curr += *A * *B;
+
+          B -= (n_left-1);
+          A += K;
+          C_curr += N - (n_left-1);
+        }
+
+        // A++;
+        // B += N;
+      }
+
+      // for(int mm = 0U; mm < 5; mm++) {
+
+      //   for(int nn = 0U; nn < n_left-1; nn++) {
+      //     *C_curr++ += c_tmp[mm*n_left + nn];
+      //   }
+
+      //   *C_curr += c_tmp[mm*n_left + n_left-1];
+      //   C_curr += N - (n_left-1);
+      // }
+    }
+
+    /* Update pointer A_ptr to point to starting address of next row */
+    A_ptr += 5*K;
+
+  }
+
+  /* Set status as ARM_MATH_SUCCESS */
+  status = ARM_MATH_SUCCESS;
+
+
+  /* Return to application */
+  return (status);
+}
+
+
+
+
+arm_status outer_fp32_5x5_k_first(
   const arm_matrix_instance_f32 * pSrcA,
   const arm_matrix_instance_f32 * pSrcB,
         arm_matrix_instance_f32 * pDst)
@@ -810,9 +1387,6 @@ arm_status outer_fp32_5x5(
 
 
 
-
-
-
 arm_status outer_fp32_5x5_m_first_test(
   const arm_matrix_instance_f32 * pSrcA,
   const arm_matrix_instance_f32 * pSrcB,
@@ -992,6 +1566,340 @@ arm_status outer_fp32_5x5_m_first_test(
 
 
 
+arm_status outer_fp32_5x5_n_first(
+  const arm_matrix_instance_f32 * pSrcA,
+  const arm_matrix_instance_f32 * pSrcB,
+        arm_matrix_instance_f32 * pDst)
+{
+  float32_t *A = pSrcA->pData;                /* Input data matrix pointer A */
+  float32_t *B = pSrcB->pData;                /* Input data matrix pointer B */
+  float32_t *C = pDst->pData;                 /* Output data matrix pointer */
+  float32_t A00, A01, A02, A03, A04,
+  A10, A11, A12, A13, A14, A20, A21, 
+  A22, A23, A24, A30, A31, A32, A33, 
+  A34, A40, A41, A42, A43, A44;    /* Temporary A data  */
+  uint16_t M = pSrcA->numRows;            /* Number of rows of input matrix A */
+  uint16_t N = pSrcB->numCols;            /* Number of columns of input matrix B */
+  uint16_t K = pSrcA->numCols;            /* Number of columns of input matrix A */
+  uint32_t m, n, k;  /* Loop counters */
+  arm_status status;                             /* Status of matrix multiplication */
+
+  float32_t *B_ptr, *C_ptr;
+
+  uint32_t em = M / 5;
+  uint32_t ek = K / 5;
+
+  float32_t C0, C1, C2, C3, C4;
+
+  for(m = 0U; m < em; m++) {
+
+    A = pSrcA->pData + m*5*K;
+    // C_ptr = pDst->pData + m*5*N;
+    C_ptr = pDst->pData + m*5;
+
+    for(k = 0U; k < ek; k++) {
+
+      B = pSrcB->pData + k*5*N;
+
+      A00 = *A++;
+      A10 = *A++;
+      A20 = *A++;
+      A30 = *A++;
+      A40 = *A;
+      
+      A += K - 4;
+
+      A01 = *A++;
+      A11 = *A++;
+      A21 = *A++;
+      A31 = *A++;
+      A41 = *A;
+
+      A += K - 4;
+
+      A02 = *A++;
+      A12 = *A++;
+      A22 = *A++;
+      A32 = *A++;
+      A42 = *A;
+
+      A += K - 4;
+
+      A03 = *A++;
+      A13 = *A++;
+      A23 = *A++;
+      A33 = *A++;
+      A43 = *A;
+
+      A += K - 4;
+
+      A04 = *A++;
+      A14 = *A++;
+      A24 = *A++;
+      A34 = *A++;
+      A44 = *A;
+
+      A += 1 - 4*K;
+
+      C = C_ptr;
+
+      /* n-first matrix multiplication */
+      for(n = 0U; n < N; n++) {
+        
+        // C0 = *C;
+        // C += N; ldc = N
+        // C1 = *C;
+        // C += N;
+        // C2 = *C;
+        // C += N;
+        // C3 = *C;
+        // C += N;
+        // C4 = *C;
+
+        C0 = *C++; // ldc = 1
+        C1 = *C++;
+        C2 = *C++;
+        C3 = *C++;
+        C4 = *C;
+
+        C0 += A00 * *B;
+        C1 += A01 * *B;
+        C2 += A02 * *B;
+        C3 += A03 * *B;
+        C4 += A04 * *B;
+
+        B += N;
+
+        C0 += A10 * *B;
+        C1 += A11 * *B;
+        C2 += A12 * *B;
+        C3 += A13 * *B;
+        C4 += A14 * *B;
+
+        B += N;
+
+
+        C0 += A20 * *B;
+        C1 += A21 * *B;
+        C2 += A22 * *B;
+        C3 += A23 * *B;
+        C4 += A24 * *B;
+
+        B += N;
+
+
+        C0 += A30 * *B;
+        C1 += A31 * *B;
+        C2 += A32 * *B;
+        C3 += A33 * *B;
+        C4 += A34 * *B;
+
+        B += N;
+
+
+        C0 += A40 * *B;
+        C1 += A41 * *B;
+        C2 += A42 * *B;
+        C3 += A43 * *B;
+        C4 += A44 * *B;
+
+
+        // *C = C4;
+        // C -= N;
+        // *C = C3;
+        // C -= N;
+        // *C = C2;
+        // C -= N;
+        // *C = C1;
+        // C -= N;
+        // *C = C0;
+        *C-- = C4;
+        *C-- = C3;
+        *C-- = C2;
+        *C-- = C1;
+        *C = C0;
+
+
+        B += 1 - 4*N;
+
+        // C++;
+        C += M;
+
+      }
+    }
+  }
+
+  /* Set status as ARM_MATH_SUCCESS */
+  status = ARM_MATH_SUCCESS;
+
+
+  /* Return to application */
+  return (status);
+}
+
+
+// arm_status outer_fp32_5x5_n_first(
+//   const arm_matrix_instance_f32 * pSrcA,
+//   const arm_matrix_instance_f32 * pSrcB,
+//         arm_matrix_instance_f32 * pDst)
+// {
+//   float32_t *A = pSrcA->pData;                /* Input data matrix pointer A */
+//   float32_t *B = pSrcB->pData;                /* Input data matrix pointer B */
+//   float32_t *C = pDst->pData;                 /* Output data matrix pointer */
+//   float32_t A00, A01, A02, A03, A04,
+//   A10, A11, A12, A13, A14, A20, A21, 
+//   A22, A23, A24, A30, A31, A32, A33, 
+//   A34, A40, A41, A42, A43, A44;    /* Temporary A data  */
+//   uint16_t M = pSrcA->numRows;            /* Number of rows of input matrix A */
+//   uint16_t N = pSrcB->numCols;            /* Number of columns of input matrix B */
+//   uint16_t K = pSrcA->numCols;            /* Number of columns of input matrix A */
+//   uint32_t m, n, k;  /* Loop counters */
+//   arm_status status;                             /* Status of matrix multiplication */
+
+//   float32_t *B_ptr, *C_ptr;
+
+//   uint32_t em = M / 5;
+//   uint32_t ek = K / 5;
+
+//   float32_t C0, C1, C2, C3, C4;
+
+//   for(m = 0U; m < em; m++) {
+
+//     A = pSrcA->pData + m*5;
+//     // C_ptr = pDst->pData + m*5*N;
+//     C_ptr = pDst->pData + m*5;
+
+//     for(k = 0U; k < ek; k++) {
+
+//       B = pSrcB->pData + k*5;
+
+//       A00 = *A++;
+//       A01 = *A++;
+//       A02 = *A++;
+//       A03 = *A++;
+//       A04 = *A;
+      
+//       A += M - 4;
+
+//       A10 = *A++;
+//       A11 = *A++;
+//       A12 = *A++;
+//       A13 = *A++;
+//       A14 = *A;
+
+//       A += M - 4;
+
+//       A20 = *A++;
+//       A21 = *A++;
+//       A22 = *A++;
+//       A23 = *A++;
+//       A24 = *A;
+
+//       A += K - 4;
+
+//       A30 = *A++;
+//       A31 = *A++;
+//       A32 = *A++;
+//       A33 = *A++;
+//       A34 = *A;
+
+//       A += M - 4;
+
+//       A40 = *A++;
+//       A41 = *A++;
+//       A42 = *A++;
+//       A43 = *A++;
+//       A44 = *A;
+
+//       A += M - 4;
+
+//       C = C_ptr;
+
+//       /* n-first matrix multiplication */
+//       for(n = 0U; n < N; n++) {
+        
+//         // C0 = *C;
+//         // C += N;
+//         // C1 = *C;
+//         // C += N;
+//         // C2 = *C;
+//         // C += N;
+//         // C3 = *C;
+//         // C += N;
+//         // C4 = *C;
+
+//         C0 = *C++;
+//         C1 = *C++;
+//         C2 = *C++;
+//         C3 = *C++;
+//         C4 = *C;
+
+//         C0 += A00 * *B;
+//         C1 += A01 * *B;
+//         C2 += A02 * *B;
+//         C3 += A03 * *B;
+//         C4 += A04 * *B;
+
+//         B++;
+
+//         C0 += A10 * *B;
+//         C1 += A11 * *B;
+//         C2 += A12 * *B;
+//         C3 += A13 * *B;
+//         C4 += A14 * *B;
+
+//         B++;
+
+
+//         C0 += A20 * *B;
+//         C1 += A21 * *B;
+//         C2 += A22 * *B;
+//         C3 += A23 * *B;
+//         C4 += A24 * *B;
+
+//         B++;
+
+
+//         C0 += A30 * *B;
+//         C1 += A31 * *B;
+//         C2 += A32 * *B;
+//         C3 += A33 * *B;
+//         C4 += A34 * *B;
+
+//         B++;
+
+
+//         C0 += A40 * *B;
+//         C1 += A41 * *B;
+//         C2 += A42 * *B;
+//         C3 += A43 * *B;
+//         C4 += A44 * *B;
+
+
+//         *C-- = C4;
+//         *C-- = C3;
+//         *C-- = C2;
+//         *C-- = C1;
+//         *C = C0;
+
+
+//         B += K  - 4;
+//         C += M;
+
+//       }
+//     }
+//   }
+
+//   /* Set status as ARM_MATH_SUCCESS */
+//   status = ARM_MATH_SUCCESS;
+
+
+//   /* Return to application */
+//   return (status);
+// }
+
+
+
 
 arm_status outer_fp32_5x5_m_first(
   const arm_matrix_instance_f32 * pSrcA,
@@ -1133,15 +2041,6 @@ arm_status outer_fp32_5x5_m_first(
   /* Return to application */
   return (status);
 }
-
-
-
-
-
-
-
-
-
 
 
 arm_status outer_fp32_5x5_test(
@@ -1851,148 +2750,23 @@ arm_status outer_fp32_5x5_sp(
 
 
 
-arm_status outer_fp32_5x5_old(
-  const arm_matrix_instance_f32 * pSrcA,
-  const arm_matrix_instance_f32 * pSrcB,
-        arm_matrix_instance_f32 * pDst)
-{
-  float32_t *A = pSrcA->pData;                /* Input data matrix pointer A */
-  float32_t *B = pSrcB->pData;                /* Input data matrix pointer B */
-  float32_t *C = pDst->pData;                 /* Output data matrix pointer */
-  float32_t C00, C01, C02, C03, C04,
-  C10, C11, C12, C13, C14, C20, C21, 
-  C22, C23, C24, C30, C31, C32, C33, 
-  C34, C40, C41, C42, C43, C44;    /* Temporary output data matrix pointer */
-
-  uint16_t M = pSrcA->numRows;            /* Number of rows of input matrix A */
-  uint16_t N = pSrcB->numCols;            /* Number of columns of input matrix B */
-  uint16_t K = pSrcA->numCols;            /* Number of columns of input matrix A */
-  uint32_t m, n, k, a_ind, b_ind, c_ind;  /* Loop counters */
-  arm_status status;                             /* Status of matrix multiplication */
-
-  uint32_t en = N / 5;
-  uint32_t em = M / 5;
 
 
-  for(n = 0U; n < en; n++) {
-
-    c_ind = n*5;
-
-    for(m = 0U; m < em; m++) {
-
-      // c_ind += 2*m*N;
-      a_ind = m*5*K;
-      b_ind = 5*n;
-
-      C00 = 0;
-      C01 = 0;
-      C02 = 0;
-      C03 = 0;
-      C04 = 0;
-
-      C10 = 0;
-      C11 = 0;
-      C12 = 0;
-      C13 = 0;
-      C14 = 0;
-
-      C20 = 0;
-      C21 = 0;
-      C22 = 0;
-      C23 = 0;
-      C24 = 0;
-
-      C30 = 0;
-      C31 = 0;
-      C32 = 0;
-      C33 = 0;
-      C34 = 0;
-
-      C40 = 0;
-      C41 = 0;
-      C42 = 0;
-      C43 = 0;
-      C44 = 0;
-
-      /* Perform tile outer product */
-      for(k = 0U; k < K; k++) {
-
-        C00 += A[a_ind] * B[b_ind];
-        C01 += A[a_ind] * B[b_ind+1];
-        C02 += A[a_ind] * B[b_ind+2];
-        C03 += A[a_ind] * B[b_ind+3];
-        C04 += A[a_ind] * B[b_ind+4];
-
-        C10 += A[a_ind+K] * B[b_ind];
-        C11 += A[a_ind+K] * B[b_ind+1];
-        C12 += A[a_ind+K] * B[b_ind+2];
-        C13 += A[a_ind+K] * B[b_ind+3];
-        C14 += A[a_ind+K] * B[b_ind+4];
-
-        C20 += A[a_ind+2*K] * B[b_ind];
-        C21 += A[a_ind+2*K] * B[b_ind+1];
-        C22 += A[a_ind+2*K] * B[b_ind+2];
-        C23 += A[a_ind+2*K] * B[b_ind+3];
-        C24 += A[a_ind+2*K] * B[b_ind+4];
-
-        C30 += A[a_ind+3*K] * B[b_ind];
-        C31 += A[a_ind+3*K] * B[b_ind+1];
-        C32 += A[a_ind+3*K] * B[b_ind+2];
-        C33 += A[a_ind+3*K] * B[b_ind+3];
-        C34 += A[a_ind+3*K] * B[b_ind+4];
-
-        C40 += A[a_ind+4*K] * B[b_ind];
-        C41 += A[a_ind+4*K] * B[b_ind+1];
-        C42 += A[a_ind+4*K] * B[b_ind+2];
-        C43 += A[a_ind+4*K] * B[b_ind+3];
-        C44 += A[a_ind+4*K] * B[b_ind+4];
 
 
-        a_ind++;
-        b_ind += N;
-      }
-
-      C[c_ind] = C00;            
-      C[c_ind+1] = C01;          
-      C[c_ind+2] = C02;          
-      C[c_ind+3] = C03;          
-      C[c_ind+4] = C04; 
-
-      C[c_ind+N] = C10;          
-      C[c_ind+N+1] = C11;        
-      C[c_ind+N+2] = C12;        
-      C[c_ind+N+3] = C13;        
-      C[c_ind+N+4] = C14;  
-
-      C[c_ind+2*N] = C20;        
-      C[c_ind+2*N+1] = C21;      
-      C[c_ind+2*N+2] = C22;      
-      C[c_ind+2*N+3] = C23;      
-      C[c_ind+2*N+4] = C24;  
-
-      C[c_ind+3*N] = C30;        
-      C[c_ind+3*N+1] = C31;      
-      C[c_ind+3*N+2] = C32;      
-      C[c_ind+3*N+3] = C33;      
-      C[c_ind+3*N+4] = C34;   
-
-      C[c_ind+4*N] = C40;        
-      C[c_ind+4*N+1] = C41;      
-      C[c_ind+4*N+2] = C42;      
-      C[c_ind+4*N+3] = C43;      
-      C[c_ind+4*N+4] = C44;      
-
-      c_ind += 5*N;
-    }
-  }
-
-  /* Set status as ARM_MATH_SUCCESS */
-  status = ARM_MATH_SUCCESS;
 
 
-  /* Return to application */
-  return (status);
-}
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2339,6 +3113,154 @@ arm_status outer_fp32_6x5_m_first(
         C += N;
 
       }
+    }
+  }
+
+  /* Set status as ARM_MATH_SUCCESS */
+  status = ARM_MATH_SUCCESS;
+
+
+  /* Return to application */
+  return (status);
+}
+
+
+
+
+
+
+arm_status outer_fp32_5x5_old(
+  const arm_matrix_instance_f32 * pSrcA,
+  const arm_matrix_instance_f32 * pSrcB,
+        arm_matrix_instance_f32 * pDst)
+{
+  float32_t *A = pSrcA->pData;                /* Input data matrix pointer A */
+  float32_t *B = pSrcB->pData;                /* Input data matrix pointer B */
+  float32_t *C = pDst->pData;                 /* Output data matrix pointer */
+  float32_t C00, C01, C02, C03, C04,
+  C10, C11, C12, C13, C14, C20, C21, 
+  C22, C23, C24, C30, C31, C32, C33, 
+  C34, C40, C41, C42, C43, C44;    /* Temporary output data matrix pointer */
+
+  uint16_t M = pSrcA->numRows;            /* Number of rows of input matrix A */
+  uint16_t N = pSrcB->numCols;            /* Number of columns of input matrix B */
+  uint16_t K = pSrcA->numCols;            /* Number of columns of input matrix A */
+  uint32_t m, n, k, a_ind, b_ind, c_ind;  /* Loop counters */
+  arm_status status;                             /* Status of matrix multiplication */
+
+  uint32_t en = N / 5;
+  uint32_t em = M / 5;
+
+
+  for(n = 0U; n < en; n++) {
+
+    c_ind = n*5;
+
+    for(m = 0U; m < em; m++) {
+
+      // c_ind += 2*m*N;
+      a_ind = m*5*K;
+      b_ind = 5*n;
+
+      C00 = 0;
+      C01 = 0;
+      C02 = 0;
+      C03 = 0;
+      C04 = 0;
+
+      C10 = 0;
+      C11 = 0;
+      C12 = 0;
+      C13 = 0;
+      C14 = 0;
+
+      C20 = 0;
+      C21 = 0;
+      C22 = 0;
+      C23 = 0;
+      C24 = 0;
+
+      C30 = 0;
+      C31 = 0;
+      C32 = 0;
+      C33 = 0;
+      C34 = 0;
+
+      C40 = 0;
+      C41 = 0;
+      C42 = 0;
+      C43 = 0;
+      C44 = 0;
+
+      /* Perform tile outer product */
+      for(k = 0U; k < K; k++) {
+
+        C00 += A[a_ind] * B[b_ind];
+        C01 += A[a_ind] * B[b_ind+1];
+        C02 += A[a_ind] * B[b_ind+2];
+        C03 += A[a_ind] * B[b_ind+3];
+        C04 += A[a_ind] * B[b_ind+4];
+
+        C10 += A[a_ind+K] * B[b_ind];
+        C11 += A[a_ind+K] * B[b_ind+1];
+        C12 += A[a_ind+K] * B[b_ind+2];
+        C13 += A[a_ind+K] * B[b_ind+3];
+        C14 += A[a_ind+K] * B[b_ind+4];
+
+        C20 += A[a_ind+2*K] * B[b_ind];
+        C21 += A[a_ind+2*K] * B[b_ind+1];
+        C22 += A[a_ind+2*K] * B[b_ind+2];
+        C23 += A[a_ind+2*K] * B[b_ind+3];
+        C24 += A[a_ind+2*K] * B[b_ind+4];
+
+        C30 += A[a_ind+3*K] * B[b_ind];
+        C31 += A[a_ind+3*K] * B[b_ind+1];
+        C32 += A[a_ind+3*K] * B[b_ind+2];
+        C33 += A[a_ind+3*K] * B[b_ind+3];
+        C34 += A[a_ind+3*K] * B[b_ind+4];
+
+        C40 += A[a_ind+4*K] * B[b_ind];
+        C41 += A[a_ind+4*K] * B[b_ind+1];
+        C42 += A[a_ind+4*K] * B[b_ind+2];
+        C43 += A[a_ind+4*K] * B[b_ind+3];
+        C44 += A[a_ind+4*K] * B[b_ind+4];
+
+
+        a_ind++;
+        b_ind += N;
+      }
+
+      C[c_ind] = C00;            
+      C[c_ind+1] = C01;          
+      C[c_ind+2] = C02;          
+      C[c_ind+3] = C03;          
+      C[c_ind+4] = C04; 
+
+      C[c_ind+N] = C10;          
+      C[c_ind+N+1] = C11;        
+      C[c_ind+N+2] = C12;        
+      C[c_ind+N+3] = C13;        
+      C[c_ind+N+4] = C14;  
+
+      C[c_ind+2*N] = C20;        
+      C[c_ind+2*N+1] = C21;      
+      C[c_ind+2*N+2] = C22;      
+      C[c_ind+2*N+3] = C23;      
+      C[c_ind+2*N+4] = C24;  
+
+      C[c_ind+3*N] = C30;        
+      C[c_ind+3*N+1] = C31;      
+      C[c_ind+3*N+2] = C32;      
+      C[c_ind+3*N+3] = C33;      
+      C[c_ind+3*N+4] = C34;   
+
+      C[c_ind+4*N] = C40;        
+      C[c_ind+4*N+1] = C41;      
+      C[c_ind+4*N+2] = C42;      
+      C[c_ind+4*N+3] = C43;      
+      C[c_ind+4*N+4] = C44;      
+
+      c_ind += 5*N;
     }
   }
 
