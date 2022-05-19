@@ -29,40 +29,70 @@ neon_sgemm.o $ARMCL_PATH/build/utils/Utils.o -L$ARMCL_PATH/build \
 # compile cake_sgemm_test
 make;
 
-NTRIALS=2;
+NTRIALS=10;
 NCORES=4;
 
-# run matmul bench
+Ms=( 512 512 2048  512 512 2048  512 512 2048  512 512 2048);
+Ks=( 2048 512 512  2048 512 512  2048 512 512  2048 512 512);
+Ns=( 256 256 256  512 512 512  1024 1024 1024  2048 2048 2048);
+
+echo 'algo,M,K,N,time' >> results_dlmc;
+
+# for index in "${!Ms[@]}";
 for ((j=1; j <= $NTRIALS; j++));
 do
-	for ((i=1; i <= $NCORES; i++));
+	for (( i=0; i<${#Ms[@]}; i++ ));
 	do
+
+		./cake_sgemm_test ${Ms[$i]} ${Ns[$i]} ${Ks[$i]} $NCORES 0 1;
+		./arm_test ${Ms[$i]} ${Ns[$i]} ${Ks[$i]} $NCORES 1;
+		./neon_sgemm ${Ms[$i]} ${Ns[$i]} ${Ks[$i]} $NCORES 1;
+
 		perf stat -e l2d_cache_refill_rd,l2d_cache_refill_wr \
-		-o reports_arm/report_cake_$i-$j ./cake_sgemm_test 5000 5000 5000 $i;
+		-o reports_arm/report_mema_$i-$j  ./cake_sgemm_test ${Ms[$i]} ${Ks[$i]} ${Ns[$i]} $NCORES 0 0;
+
+		perf stat -e l2d_cache_refill_rd,l2d_cache_refill_wr \
+		-o reports_arm/report_armpl_$i-$j ./arm_test ${Ms[$i]} ${Ks[$i]} ${Ns[$i]} $NCORES 0;
+
+		perf stat -e l2d_cache_refill_rd,l2d_cache_refill_wr \
+		-o reports_arm/report_armcl_$i-$j ./neon_sgemm ${Ms[$i]} ${Ks[$i]} ${Ns[$i]} $NCORES 0;
+
 	done
 done
 
 
-
-for ((j=1; j <= $NTRIALS; j++));
-do
-	for ((i=1; i <= $NCORES; i++));
-	do
-		perf stat -e l2d_cache_refill_rd,l2d_cache_refill_wr \
-		-o reports_arm/report_armpl_$i-$j ./arm_test 5000 5000 5000 $i;
-	done
-done
-
-
-
-for ((j=1; j <= $NTRIALS; j++));
-do
-	for ((i=1; i <= $NCORES; i++));
-	do
-		perf stat -e l2d_cache_refill_rd,l2d_cache_refill_wr \
-		-o reports_arm/report_armcl_$i-$j ./neon_sgemm 5000 5000 5000 $i;
-	done
-done
+# # run matmul bench
+# for ((j=1; j <= $NTRIALS; j++));
+# do
+# 	for ((i=1; i <= $NCORES; i++));
+# 	do
+# 		perf stat -e l2d_cache_refill_rd,l2d_cache_refill_wr \
+# 		-o reports_arm/report_cake_$i-$j ./cake_sgemm_test 5000 5000 5000 $i;
+# 	done
+# done
 
 
-python3 plots.py $NTRIALS; 
+
+
+# for ((j=1; j <= $NTRIALS; j++));
+# do
+# 	for ((i=1; i <= $NCORES; i++));
+# 	do
+		# perf stat -e l2d_cache_refill_rd,l2d_cache_refill_wr \
+		# -o reports_arm/report_armpl_$i-$j ./arm_test 5000 5000 5000 $i;
+# 	done
+# done
+
+
+
+# for ((j=1; j <= $NTRIALS; j++));
+# do
+# 	for ((i=1; i <= $NCORES; i++));
+# 	do
+# 		perf stat -e l2d_cache_refill_rd,l2d_cache_refill_wr \
+# 		-o reports_arm/report_armcl_$i-$j ./neon_sgemm 5000 5000 5000 $i;
+# 	done
+# done
+
+
+# python3 plots.py $NTRIALS; 

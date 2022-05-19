@@ -46,6 +46,7 @@ public:
         N = strtol(argv[2], nullptr, 10);
         K = strtol(argv[3], nullptr, 10);
         p = atoi(argv[4]);
+        write_result = atoi(argv[5]);
 
         printf("M = %ld, K = %ld, N = %ld, p = %d\n", M,K,N,p);
         
@@ -70,20 +71,23 @@ public:
         fill_random_tensor(src1, -1.f, 1.f);
         fill_random_tensor(src2, -1.f, 1.f);
     
-        // Dummy run for CLTuner
-        struct timespec start, end;
-        double diff_t;
 
-        clock_gettime(CLOCK_REALTIME, &start);
+        if(write_result) {
 
-        sgemm.run();
+            // Dummy run for CLTuner
+            struct timespec start, end;
+            double diff_t;
 
-        clock_gettime(CLOCK_REALTIME, &end);
-        long seconds = end.tv_sec - start.tv_sec;
-        long nanoseconds = end.tv_nsec - start.tv_nsec;
-        diff_t = seconds + nanoseconds*1e-9;
-        printf("sgemm 1 time: %f \n", diff_t); 
+            clock_gettime(CLOCK_REALTIME, &start);
 
+            sgemm.run();
+
+            clock_gettime(CLOCK_REALTIME, &end);
+            long seconds = end.tv_sec - start.tv_sec;
+            long nanoseconds = end.tv_nsec - start.tv_nsec;
+            diff_t = seconds + nanoseconds*1e-9;
+            printf("sgemm 1 time: %f \n", diff_t); 
+        }
 
         return true;
     }
@@ -106,12 +110,14 @@ public:
         diff_t = seconds + nanoseconds*1e-9;
         printf("sgemm time: %f \n", diff_t); 
 
-        char fname[50];
-        snprintf(fname, sizeof(fname), "results_sq");
-        FILE *fp;
-        fp = fopen(fname, "a");
-        fprintf(fp, "armcl,%d,%ld,%f\n",p,M,diff_t);
-        fclose(fp);
+        if(write_result) {
+            char fname[50];
+            snprintf(fname, sizeof(fname), "results_dlmc");
+            FILE *fp;
+            fp = fopen(fname, "a");
+            fprintf(fp, "armcl,%d,%d,%d,%f\n",M,K,N,diff_t);
+            fclose(fp);
+        }
 
     }
     void do_teardown() override
@@ -130,6 +136,7 @@ private:
     size_t      N;
     size_t      K;
     int         p;
+    int         write_result;
     bool        is_fortran{};
     std::string output_filename{};
 };
