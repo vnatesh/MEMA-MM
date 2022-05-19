@@ -2176,6 +2176,74 @@ void testing() {
 
 
 
+
+
+void tiny_ml_benchmark_power() {
+
+  arm_matrix_instance_f32 A;      /* Matrix A Instance */
+  arm_matrix_instance_f32 B;     /* Matrix B(A transpose) instance */
+  arm_matrix_instance_f32 C;   /* Matrix C( B multiply with A) instance */
+  arm_matrix_instance_f32 C_ref;   /* Matrix C( B multiply with A) instance */
+
+  arm_status status;
+
+  unsigned long start1, end1, diff;
+  float *A_f32, *B_f32, *C_f32, *C_f32_ref;
+  uint32_t M , N , K ;
+
+  int Ms[] = {16,16,32,32,32,64,64,64, 64, 64, 8 ,16 ,32 ,32 ,64 ,64 ,128,128,256,256};
+  int Ks[] = {27 ,144,144,288,16 ,288,576,32 , 40, 64, 27 , 8 , 16 , 32 , 32 , 64 , 64 , 128, 128, 256};
+  int Ns[] = {1024,1024,256,256,256,64,64,64, 122, 125, 2304,2304,576,576,144,144, 36, 36, 9, 9};
+
+  Serial.println("\nid,M,N,K,algo,time");
+
+  for(int i = 0; i < 20; i++) {
+
+    M = Ms[i] + 10 - (Ms[i] % 10);
+    K = Ks[i];
+    N = Ns[i] + 10 - (Ns[i] % 10);
+
+    A_f32 = (float *) malloc( M*K*sizeof( float ));
+    B_f32 = (float *) malloc( K*N*sizeof( float ));
+    C_f32 = (float *) calloc( M*N, sizeof( float ));
+
+    char buf[100];
+
+    srand(time(NULL));
+    rand_init(A_f32, M, K);
+    rand_init(B_f32, K, N);
+
+    arm_mat_init_f32(&A, M, K, (float32_t *) A_f32);
+    arm_mat_init_f32(&B, K, N, (float32_t *) B_f32);
+    arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
+
+    // status = arm_mat_mult_f32(&A, &B, &C_ref);
+
+    int iters = 100;
+    for(int i = 0; i < iters; i++) {
+      status = outer_fp32_5x5_k_first(&A, &B, &C);
+    }
+
+    // free(C_f32);
+    // C_f32 = (float *) calloc( M*N, sizeof( float ));
+    // arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
+
+    // int iters = 1000;
+    // for(int i = 0; i < iters; i++) {
+    //   status = inner_fp32_2x8x2(&A, &B, &C);
+    // }
+
+    free(A_f32);
+    free(B_f32);
+    free(C_f32);
+
+    delay(1000);
+  }
+}
+
+
+
+
 void tiny_ml_benchmark() {
 
 
@@ -2225,6 +2293,8 @@ void tiny_ml_benchmark() {
     diff = end1 - start1;
     sprintf(buf, "%d,%d,%d,%d,arm_mat_mult_f32,%lu", i, Ms[i],Ns[i],Ks[i],diff);
     Serial.println(buf); //prints time since program started
+    free(C_f32_ref);
+
 
 
     C_f32 = (float *) calloc( M*N, sizeof( float ));
@@ -2254,18 +2324,92 @@ void tiny_ml_benchmark() {
     sprintf(buf, "%d,%d,%d,%d,arm inner 2x8x2,%lu", i, Ms[i],Ns[i],Ks[i],diff);
     Serial.println(buf); //prints time since program started
 // f32_gemm_checker(C.pData, C_ref.pData, N, M, K);
-  }
 
-  free(A_f32);
-  free(B_f32);
-  free(C_f32);
-  free(C_f32_ref);
+    free(A_f32);
+    free(B_f32);
+    free(C_f32);
+  }
 }
 
 
 
 
 
+
+
+
+void tiny_ml_benchmark_q15_power() {
+
+  arm_matrix_instance_q15 A;      /* Matrix A Instance */
+  arm_matrix_instance_q15 B;     /* Matrix B(A transpose) instance */
+  arm_matrix_instance_q15 C;   /* Matrix C( B multiply with A) instance */
+  arm_matrix_instance_q15 C_ref;   /* Matrix C( B multiply with A) instance */
+
+  arm_status status;
+
+  unsigned long start1, end1, diff;
+  int16_t *A_16, *B_16, *C_16, *C_16_ref, *B_trans;
+  // uint32_t M = 400, N = 27, K = 20;
+  uint32_t M, N, K;
+
+
+  int Ms[] = {16,16,32,32,32,64,64,64, 64, 64, 8 ,16 ,32 ,32 ,64 ,64 ,128,128,256,256};
+  int Ks[] = {27 ,144,144,288,16 ,288,576,32 , 40, 64, 27 , 8 , 16 , 32 , 32 , 64 , 64 , 128, 128, 256};
+  int Ns[] = {1024,1024,256,256,256,64,64,64, 122, 125, 2304,2304,576,576,144,144, 36, 36, 9, 9};
+
+  Serial.println("\nid,M,N,K,algo,time");
+
+  for(int i = 0; i < 20; i++) {
+
+    char buf[100];
+
+    M = Ms[i] + 4 - (Ms[i] % 4);
+    K = Ks[i] + 2 - (Ks[i] % 2);
+    N = Ns[i] + 2 - (Ns[i] % 2);
+
+    A_16 = (int16_t *) malloc( M*K*sizeof( int16_t ));
+    B_16 = (int16_t *) malloc( K*N*sizeof( int16_t ));
+    C_16 = (int16_t *) calloc( M*N, sizeof( int16_t ));
+    B_trans = (int16_t *) malloc( K*N*sizeof( int16_t ));
+
+    // gettimeofday (&start, NULL);
+    srand(time(NULL));
+    rand_init_q15(A_16, M, K);
+    rand_init_q15(B_16, K, N);
+
+    arm_mat_init_q15(&A, M, K, (q15_t *) A_16);
+    arm_mat_init_q15(&B, K, N, (q15_t *) B_16);
+    arm_mat_init_q15(&C, M, N, (q15_t *) C_16);
+
+
+    int iters = 100;
+    for(int i = 0; i < iters; i++) {
+      status = arm_q15_inner_2x4x2(&A, &B, &C, (q15_t *) B_trans);
+    }
+
+    
+
+    // free(B_trans);
+    // free(C_16);
+    // C_16 = (int16_t *) calloc( M*N, sizeof( int16_t ));
+    // B_trans = (int16_t *) malloc( K*N*sizeof( int16_t ));
+    // arm_mat_init_q15(&C, M, N, (q15_t *) C_16);
+
+    // int iters = 1000;
+    // for(int i = 0; i < iters; i++) {
+    //   status = outer_q15_4x2(&A, &B, &C, (q15_t *) B_trans);
+    // }
+
+    
+    free(A_16);
+    free(B_16);
+    free(C_16);
+    free(B_trans);
+
+    delay(1000);
+  }
+
+}
 
 
 
@@ -2529,8 +2673,8 @@ void loop() {
    // arm_vs_mema_fp32_sp();
   // arm_vs_mema_fp32_k();
 
-  arm_vs_mema_fp32_mk();
-// tiny_ml_benchmark();
+  // arm_vs_mema_fp32_mk();
+tiny_ml_benchmark();
 // tiny_ml_benchmark_q15();
   
   // testing();
