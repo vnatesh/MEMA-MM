@@ -11,7 +11,108 @@ import math
 
 
 
-#------------------- MCU Experiments-------------------------
+
+# integrate power over time (200 us interval) to get energy (mJ) during MM 
+def compute_energy_peaks(fname, high, low):
+	df1 = pandas.read_csv(fname)
+	c = list(df1['USB Avg Current (mA)'])
+	p = list(df1['USB Avg Power (mW)']/1e3)
+	i = 0;
+	energy = []
+	while i < len(p):
+		if c[i] >= high:
+			x = 0
+			j = 0
+			while c[i+j] >= low:
+				# energy (J) = sum(power (W) X time (sec)) (0.0002 sec per sample)
+				x += p[i+j]*0.0002
+				j += 1
+			#
+			energy.append(x * 1000.0)
+			i += j
+		else:
+			i += 1
+	#
+	return energy
+
+
+def plot_arm_vs_mema_energy(fname = 'arm_vs_mema_energy'):
+	plt.rcParams.update({'font.size': 16})
+	markers = ['o','v','s','d','^']
+	colors = ['b','g','aqua','k','m','r']
+	out_fp32 = compute_energy_peaks('power_outer_fp32_tiny.csv', 20, 18)
+	in_fp32 = compute_energy_peaks('power_inner_fp32_tiny.csv', 20, 18)
+	out_q15 = compute_energy_peaks('power_outer_q15_tiny.csv', 20, 18)
+	in_q15 = compute_energy_peaks('power_inner_q15_tiny.csv', 20, 18)
+	Ms = [16,16,32,32,32,64,64,64, 64, 64, 8 ,16 ,32 ,32 ,64 ,64 ,128,128,256,256]
+	Ks = [27 ,144,144,288,16 ,288,576,32 , 40, 64, 27 , 8 , 16 , 32 , 32 , 64 , 64 , 128, 128, 256]
+	Ns = [1024,1024,256,256,256,64,64,64, 122, 125, 2304,2304,576,576,144,144, 36, 36, 9, 9]
+	#
+	for i in range(len(Ns)):
+		out_fp32[i] /= 10
+		in_fp32[i] /= 10
+		out_q15[i] /= 10
+		in_q15[i] /= 10
+	#
+	# fp32_ops = [2.0*Ms[i]*Ks[i]*Ns[i] / 1e6 for i in range(len(Ns))]
+	# q15_ops = [22.0*Ms[i]*Ks[i]*Ns[i] / 1e6 for i in range(len(Ns))]
+	#
+	plt.rcParams["legend.framealpha"] = 1
+	plt.figure(figsize = (10,4))
+	barWidth = 0.25
+	br1 = np.arange(len(Ms))
+	br2 = [x + barWidth for x in br1]
+	br3 = [x + barWidth for x in br2]
+	# Make the plot
+	plt.bar(br2, out_fp32, color =colors[4], width = barWidth,
+	        edgecolor ='grey', label ='mema outer 5x1x5')
+	plt.bar(br1, in_fp32, color =colors[1], width = barWidth,
+	        edgecolor ='grey', label = 'cmsis inner 2x8x2')
+	#
+	plt.title('(b) FP32 MM Energy Usage on Cortex-M4', fontsize = 24)
+	plt.xlabel("MxKxN Dimensions of Layer", fontsize = 24)
+	plt.ylabel('Energy Usage (mJ)', fontsize = 24)
+	plt.xticks([r + barWidth for r in range(len(Ms))],
+        ["%dx%dx%d" % (Ms[i],Ks[i],Ns[i]) for i in range(len(Ms))])
+	plt.legend(loc = "upper right", prop={'size': 16})
+	plt.xticks(rotation=70)
+	plt.savefig("%s2_fp32.pdf" % fname, bbox_inches='tight')
+	plt.show()
+	plt.clf()
+	plt.close('all')
+	#
+	#
+	#
+	plt.figure(figsize = (10,4))
+	barWidth = 0.25
+	br1 = np.arange(len(Ms))
+	br2 = [x + barWidth for x in br1]
+	br3 = [x + barWidth for x in br2]
+	# Make the plot
+	plt.bar(br2, out_q15, color =colors[4], width = barWidth,
+	        edgecolor ='grey', label ='mema outer 4x2x2')
+	plt.bar(br1, in_q15, color =colors[1], width = barWidth,
+	        edgecolor ='grey', label = 'cmsis inner 2x4x2')
+	#
+	plt.title('(e) Q15 MM Energy Usage on Cortex-M4', fontsize = 24)
+	plt.xlabel("MxKxN Dimensions of Layer", fontsize = 24)
+	plt.ylabel('Energy Usage (mJ)', fontsize = 24)
+	plt.xticks([r + barWidth for r in range(len(Ms))],
+        ["%dx%dx%d" % (Ms[i],Ks[i],Ns[i]) for i in range(len(Ms))])
+	plt.legend(loc = "upper right", prop={'size': 16})
+	plt.xticks(rotation=70)
+	plt.savefig("%s_q15.pdf" % fname, bbox_inches='tight')
+	plt.show()
+	plt.clf()
+	plt.close('all')
+
+
+
+plot_arm_vs_mema_energy(fname = 'arm_vs_mema_energy')
+
+
+
+
 
 
 def roofline(fname = 'roofline_arm'):
@@ -22,8 +123,8 @@ def roofline(fname = 'roofline_arm'):
 	tput = [42*1e6,283*1e6,32*1e9]
 	bw = [256*1e6,864*1e6,4*1e9]
 	ai = range(13)
-	fig = plt.figure(figsize = (7,4))
-	plt.title('Roofline Models For Embedded ARM Architectures', fontsize = 14)
+	fig = plt.figure(figsize = (6,4))
+	plt.title('(c) Roofline Models For Embedded ARM CPUs', fontsize = 20)
 	plt.plot(ai, [i for i in ai[:5]] + [4]*(len(ai)-5), 'b', label = cpus[0], color = colors[0])
 	plt.plot(ai, [2.5*i for i in ai[:7]] + [15]*(len(ai)-7), 'b', label = cpus[1], color = colors[1])
 	plt.plot(ai, [4*i for i in ai[:9]] + [32]*(len(ai)-9), 'b', label = cpus[2], color = colors[2])
@@ -37,9 +138,9 @@ def roofline(fname = 'roofline_arm'):
 	plt.plot([0,4], [4,4], '--', color = 'tab:gray')
 	plt.plot([0,6], [15,15], '--', color = 'tab:gray')
 	plt.plot([0,8], [32,32], '--', color = 'tab:gray')
-	plt.legend(loc = "upper left", prop={'size': 10})
-	plt.xlabel('Operational Intensity (FLOPs/byte)', fontsize = 16)
-	plt.ylabel('Throughput (GFLOPs/sec)', fontsize = 14)
+	plt.legend(loc = "upper left", prop={'size': 14})
+	plt.xlabel('Arithmetic Intensity (FLOPs/byte)', fontsize = 20)
+	plt.ylabel('Throughput (GFLOPs/sec)', fontsize = 20)
 	plt.xticks([4,6,8],
 		[round(tput[0] / bw[0],2), 
 		round(tput[1] / bw[1],2),
@@ -62,8 +163,129 @@ roofline()
 
 
 
+def plot_mema_vs_arm_dlmc(fname = 'mema_vs_arm_dlmc', ntrials = 10):
+	plt.rcParams.update({'font.size': 12})
+	markers = ['o','v','s','d','^']
+	colors = ['b','g','aqua','k','m','r']
+	labels = ['MEMA', 'ARMPL', 'ARMCL']
+	Ms=(512,512,2048,512,512,2048,512,512,2048,512,512,2048)
+	Ks=(2048,512,512,2048,512,512,2048,512,512,2048,512,512)
+	Ns=(256,256,256,512,512,512,1024,1024,1024,2048,2048,2048)
+	df1 = pandas.read_csv('results_dlmc')
+	#
+	#
+	#
+	gflops_armpl_arr=[];gflops_mema_arr=[];dram_io_mema_arr=[];dram_io_armpl_arr=[];cake_mem_acc_arr=[]
+	dram_io_armpl = 0; dram_io_mema = 0; gflops_armpl = 0; gflops_mema = 0; cake_mem_acc = 0
+	gflops_armcl_arr=[]; dram_io_armcl_arr=[]; dram_io_armcl = 0; gflops_armcl = 0;
+	for i in range(len(Ms)):
+		for j in range(1,ntrials+1):
+			# multiply by 64 bytes since external memory request non-cacheable 
+			# and L2-data cache refills/writeback PMUs
+			# in ARM are expressed in terms of number of cache lines
+			a = open('reports_arm/report_armpl_%d-%d' % (i,j),'r').read().split('\n')
+			# cpu_time1 = float(re.search(r'\d+\.\d+', a[8]).group())
+			cpu_time = df1[(df1['algo'] == 'armpl') & (df1['M'] == Ms[i]) \
+			& (df1['K'] == Ks[i]) & (df1['N'] == Ns[i])]['time'].mean()
+			dram_io_armpl += (((int(re.search(r'\d+', a[5]).group())*64.0) )) / (1e9)
+			dram_io_armpl += (((int(re.search(r'\d+', a[6]).group())*64.0) ) ) / (1e9)
+			gflops_armpl += (2*float(Ms[i]*Ns[i]*Ks[i]) / cpu_time) / (1e9)
+			#
+			a = open('reports_arm/report_armcl_%d-%d' % (i,j),'r').read().split('\n')
+			# cpu_time1 = float(re.search(r'\d+\.\d+', a[8]).group())
+			cpu_time = df1[(df1['algo'] == 'armcl') & (df1['M'] == Ms[i]) \
+			& (df1['K'] == Ks[i]) & (df1['N'] == Ns[i])]['time'].mean()
+			dram_io_armcl += (((int(re.search(r'\d+', a[5]).group())*64.0) ) ) / (1e9)
+			dram_io_armcl += (((int(re.search(r'\d+', a[6]).group())*64.0) )) / (1e9)
+			gflops_armcl += (2*float(Ms[i]*Ns[i]*Ks[i]) / cpu_time) / (1e9)
+			#
+			a = open('reports_arm/report_mema_%d-%d' % (i,j),'r').read().split('\n')
+			# cpu_time1 = float(re.search(r'\d+\.\d+', a[8]).group())
+			cpu_time = df1[(df1['algo'] == 'mema') & (df1['M'] == Ms[i]) \
+			& (df1['K'] == Ks[i]) & (df1['N'] == Ns[i])]['time'].mean()
+			dram_io_mema += (((int(re.search(r'\d+', a[5]).group())*64.0) ) ) / (1e9)
+			dram_io_mema += (((int(re.search(r'\d+', a[6]).group())*64.0)) ) / (1e9)
+			gflops_mema += (2*float(Ms[i]*Ns[i]*Ks[i]) / cpu_time) / (1e9)# / (float(NUM_CPUs[i]))
+		#
+		dram_io_armpl_arr.append(dram_io_armpl / ntrials)
+		dram_io_armcl_arr.append(dram_io_armcl / ntrials)
+		dram_io_mema_arr.append(dram_io_mema / ntrials)
+		gflops_armpl_arr.append(gflops_armpl / ntrials)
+		gflops_armcl_arr.append(gflops_armcl / ntrials)
+		gflops_mema_arr.append(gflops_mema / ntrials)
+		dram_io_armpl = 0; dram_io_mema = 0; gflops_armpl = 0; gflops_mema = 0; cake_mem_acc = 0
+		dram_io_armcl = 0; gflops_armcl = 0;
+	#
+	#
+	plt.figure(figsize = (10,4))
+	barWidth = 0.25
+	br1 = np.arange(len(Ms))
+	br2 = [x + barWidth for x in br1]
+	br3 = [x + barWidth for x in br2]
+	# Make the plot
+	plt.bar(br2, dram_io_mema_arr, color =colors[4], width = barWidth,
+	        edgecolor ='grey', label =labels[0])
+	plt.bar(br1, dram_io_armpl_arr, color =colors[5], width = barWidth,
+	        edgecolor ='grey', label =labels[1])
+	plt.bar(br3, dram_io_armcl_arr, color =colors[3], width = barWidth,
+	        edgecolor ='grey', label =labels[2])
+	# plt.plot(range(1,len(Ms)+1), list(dram_io_armpl_arr), label = labels[1],  marker = markers[1], color = colors[5])
+	# plt.plot(range(1,len(Ms)+1), list(dram_io_mema_arr), label = labels[0],  marker = markers[0], color = colors[4])
+	# plt.plot(range(1,len(Ms)+1), list(dram_io_armcl_arr), label = labels[2],  marker = markers[2], color = colors[3])
+	# plt.plot(list(NUM_CPUs), list(cake_mem_acc_arr), label = labels[2], color = colors[5], linewidth = 2, linestyle='dashed')
+	#
+	plt.title('(a) DLMC Benchmark DRAM IO On Cortex-A72', fontsize = 24)
+	plt.xlabel("MxKxN Dimensions of Layer", fontsize = 24)
+	plt.ylabel("DRAM IO (GB)", fontsize = 24)
+	plt.xticks([r + barWidth for r in range(len(Ms))],
+        ["%dx%dx%d" % (Ms[i],Ks[i],Ns[i]) for i in range(len(Ms))])
+	plt.legend(loc = "upper left", prop={'size': 14})
+	plt.xticks(rotation=60, fontsize = 20)
+	plt.yticks(fontsize = 20)
+	plt.savefig("%s_dram.pdf" % fname, bbox_inches='tight')
+	plt.show()
+	plt.clf()
+	plt.close('all')
+	#
+	#
+	plt.figure(figsize = (10,4))
+	plt.bar(br2, gflops_mema_arr, color =colors[4], width = barWidth,
+	        edgecolor ='grey', label =labels[0])
+	plt.bar(br1, gflops_armpl_arr, color =colors[5], width = barWidth,
+	        edgecolor ='grey', label =labels[1])
+	plt.bar(br3, gflops_armcl_arr, color =colors[3], width = barWidth,
+	        edgecolor ='grey', label =labels[2])
+	# plt.plot(range(1,len(Ms)+1), list(gflops_mema_arr), label = labels[0],  marker = markers[1], color = colors[5])
+	# plt.plot(range(1,len(Ms)+1), list(gflops_armpl_arr), label = labels[1],  marker = markers[0], color = colors[4])
+	# plt.plot(range(1,len(Ms)+1), list(gflops_armcl_arr), label = labels[2],  marker = markers[2], color = colors[3])
+	#
+	plt.ticklabel_format(useOffset=False, style='plain')
+	plt.title('(b) DLMC Benchmark Throughput On Cortex-A72', fontsize = 24)
+	plt.xlabel("MxKxN Dimensions of Layer", fontsize = 24)
+	plt.ylabel("Throughput (GFLOP/s)", fontsize = 24)
+	plt.legend(loc = "lower right", prop={'size': 14})
+	plt.xticks([r + barWidth for r in range(len(Ms))],
+        ["%dx%dx%d" % (Ms[i],Ks[i],Ns[i]) for i in range(len(Ms))], fontsize = 12)
+	plt.xticks(rotation=60, fontsize = 20)
+	plt.yticks(fontsize = 20)
+	# plt.ylim(ymin = 0,ymax = 35)
+	plt.savefig("%s_perf.pdf" % fname, bbox_inches='tight')
+	plt.show()
+	plt.clf()
+	plt.close('all')
+	#
+
+
+
+plot_mema_vs_arm_dlmc()
+
+
+
 def plot_arm_vs_mema_tinyml(fname = 'plot_arm_vs_mema_tinyml'):
 	plt.rcParams.update({'font.size': 16})
+	# leg = plt.legend()
+	# for lh in leg.legendHandles: 
+	#     lh.set_alpha(1)
 	markers = ['o','v','s','d','^']
 	colors = ['b','g','aqua','k','m','r']
 	df1 = pandas.read_csv('tinymlbenchfp32')
@@ -72,55 +294,112 @@ def plot_arm_vs_mema_tinyml(fname = 'plot_arm_vs_mema_tinyml'):
 	Ks = [27 ,144,144,288,16 ,288,576,32 , 40, 64, 27 , 8 , 16 , 32 , 32 , 64 , 64 , 128, 128, 256]
 	Ns = [1024,1024,256,256,256,64,64,64, 122, 125, 2304,2304,576,576,144,144, 36, 36, 9, 9]
 	l = range(len(Ns))
-	# tput_inner_1x8x1 = [float(2*Ms[i]*Ks[i]*Ns[i]) / float(df1[(df1['algo'] == 'arm_mat_mult_f32') \
+	# tput_inner_1x8x1 = [float(2*Ms[i]*Ks[i]*Ns[i] / 1e6) / float(df1[(df1['algo'] == 'arm_mat_mult_f32') \
 	# 	& (df1['id'] == i)]['time'].values[0]) for i in l]
-	tput_inner_2x8x2 = [float(2*Ms[i]*Ks[i]*Ns[i]) / float(df1[(df1['algo'] == 'arm inner 2x8x2') \
-		& (df1['id'] == i)]['time'].values[0]) for i in l]
-	tput_mema = [float(2*Ms[i]*Ks[i]*Ns[i]) / float(df1[(df1['algo'] == 'mema outer 5x5') \
-		& (df1['id'] == i)]['time'].values[0]) for i in l]
-	fig = plt.figure(figsize = (8,4))
-	fig.legend(loc=7) 
-	plt.title('(a) FP32 Throughput on TinyML Benchmark', fontsize = 14)
-	plt.plot(l, tput_mema, 'b', label = 'mema outer 5x1x5', marker = markers[4], color = colors[4])
-	plt.plot(l, tput_inner_2x8x2, 'b', label = 'cmsis inner 2x8x2', marker = markers[1], color = colors[1])
+	plt.figure(figsize = (12,4))
+	plt.rcParams["legend.framealpha"] = 1
+	barWidth = 0.25
+	br1 = np.arange(len(Ms))
+	br2 = [x + barWidth for x in br1]
+	br3 = [x + barWidth for x in br2]
+	# Make the plot
+	tput_inner_2x8x2 = [float(2*Ms[i]*Ks[i]*Ns[i] / 1e6) / (float(df1[(df1['algo'] == 'arm inner 2x8x2') \
+		& (df1['id'] == i)]['time'].values[0]) / 1e6) for i in l]
+	tput_mema = [float(2*Ms[i]*Ks[i]*Ns[i] / 1e6) / (float(df1[(df1['algo'] == 'mema outer 5x5') \
+		& (df1['id'] == i)]['time'].values[0]) / 1e6) for i in l]
+	plt.bar(br2, tput_mema, color =colors[4], width = barWidth,
+	        edgecolor ='grey', label ='mema outer 4x2x2')
+	plt.bar(br1, tput_inner_2x8x2, color =colors[1], width = barWidth,
+	        edgecolor ='grey', label = 'cmsis inner 2x4x2')
+	# plt.plot(l, tput_mema, 'b', label = 'mema outer 5x1x5', marker = markers[4], color = colors[4])
+	# plt.plot(l, tput_inner_2x8x2, 'b', label = 'cmsis inner 2x8x2', marker = markers[1], color = colors[1])
+	plt.title('(a) Cortex-M4 FP32 Throughput on TinyML Benchmark', fontsize = 24)
 	# plt.plot(l, tput_inner_1x8x1, 'b', label = 'cmsis inner 1x8x1', marker = markers[3], color = colors[3])
-	plt.legend(loc = "lower right", prop={'size': 10})
-	plt.xlabel('problem id', fontsize = 16)
-	plt.ylabel('Throughput (MFLOPs/sec)', fontsize = 14)
-	plt.xticks(l,fontsize = 14)
-	plt.yticks(range(0,27,5), fontsize = 14)
+	plt.legend(loc = "lower right", prop={'size': 16})
+	plt.xlabel('MxKxN Dimensions of Layer', fontsize = 24)
+	plt.ylabel('Throughput (MFLOPs/sec)', fontsize = 24)
+	plt.xticks([r + barWidth for r in range(len(Ms))],
+        ["%dx%dx%d" % (Ms[i],Ks[i],Ns[i]) for i in range(len(Ms))])
+	plt.xticks(rotation=60, fontsize = 24)
+	plt.yticks(range(0,27,5), fontsize = 20)
 	# plt.ylim(ymin = 2e-8,ymax = 0.00012)
 	# plt.ticklabel_format(axis="y", style="sci")
-	plt.savefig("%s_fp32.pdf" % fname, bbox_inches='tight')
+	plt.savefig("%s_fp32_M4.pdf" % fname, bbox_inches='tight')
 	plt.show()
 	plt.clf()
 	plt.close('all')
 	#
 	#
-	tput_inner_2x4x2 = [float(2*Ms[i]*Ks[i]*Ns[i]) / float(df2[(df2['algo'] == 'arm_q15_inner_2x4x2') \
-		& (df2['id'] == i)]['time'].values[0]) for i in l]
-	tput_mema = [float(2*Ms[i]*Ks[i]*Ns[i]) / float(df2[(df2['algo'] == 'outer_q15_4x2') \
-		& (df2['id'] == i)]['time'].values[0]) for i in l]
-	fig = plt.figure(figsize = (8,4))
-	fig.legend(loc=7) 
-	plt.title('(b) Q15 Throughput on TinyML Benchmark', fontsize = 14)
-	plt.plot(l, tput_mema, 'b', label = 'mema outer 4x1x2', marker = markers[4], color = colors[4])
-	plt.plot(l, tput_inner_2x4x2, 'b', label = 'cmsis inner 2x4x2', marker = markers[1], color = colors[1])
-	# plt.plot(l, tput_inner_1x8x1, 'b', label = 'cmsis inner 1x8x1', marker = markers[3], color = colors[3])
-	plt.legend(loc = "lower right", prop={'size': 10})
-	plt.xlabel('problem id', fontsize = 16)
-	plt.ylabel('Throughput (MOPs/sec)', fontsize = 14)
-	plt.xticks(l,fontsize = 14)
+	plt.figure(figsize = (12,4))
+	barWidth = 0.25
+	br1 = np.arange(len(Ms))
+	br2 = [x + barWidth for x in br1]
+	br3 = [x + barWidth for x in br2]
+	# Make the plot
+	tput_inner_2x4x2 = [float(2*Ms[i]*Ks[i]*Ns[i] / 1e6) / (float(df2[(df2['algo'] == 'arm_q15_inner_2x4x2') \
+		& (df2['id'] == i)]['time'].values[0]) / 1e6) for i in l]
+	tput_mema = [float(2*Ms[i]*Ks[i]*Ns[i] / 1e6) / (float(df2[(df2['algo'] == 'outer_q15_4x2') \
+		& (df2['id'] == i)]['time'].values[0]) / 1e6) for i in l]
+	plt.bar(br2, tput_mema, color =colors[4], width = barWidth,
+	        edgecolor ='grey', label ='mema outer 4x2x2')
+	plt.bar(br1, tput_inner_2x4x2, color =colors[1], width = barWidth,
+	        edgecolor ='grey', label = 'cmsis inner 2x4x2')
+	# plt.plot(l, tput_mema, 'b', label = 'mema outer 4x2x2', marker = markers[4], color = colors[4])
+	# plt.plot(l, tput_inner_2x4x2, 'b', label = 'cmsis inner 2x4x2', marker = markers[1], color = colors[1])
+	plt.title('(b) Cortex-M4 Q15 Throughput on TinyML Benchmark', fontsize = 24)
+	plt.xlabel("MxKxN Dimensions of Layer", fontsize = 24)
+	plt.ylabel('Throughput (MOPs/sec)', fontsize = 24)
+	plt.xticks([r + barWidth for r in range(len(Ms))],
+        ["%dx%dx%d" % (Ms[i],Ks[i],Ns[i]) for i in range(len(Ms))])
+	plt.legend(loc = "lower right", prop={'size': 16})
+	plt.xticks(rotation=60, fontsize = 24)
 	plt.yticks(range(0,27,5), fontsize = 14)
+	plt.savefig("%s_q15_M4.pdf" % fname, bbox_inches='tight')
+	plt.show()
+	plt.clf()
+	plt.close('all')
+	#
+	#
+	#
+	df1 = pandas.read_csv('tinymlbenchfp32_M7')
+	l = range(len(Ns))
+	plt.figure(figsize = (12,4))
+	barWidth = 0.25
+	br1 = np.arange(len(Ms))
+	br2 = [x + barWidth for x in br1]
+	br3 = [x + barWidth for x in br2]
+	tput_inner_2x8x2 = [float(2*Ms[i]*Ks[i]*Ns[i] / 1e6) / (float(df1[(df1['algo'] == 'arm inner 2x8x2') \
+		& (df1['id'] == i)]['time'].values[0]) / 216e6) for i in l]
+	tput_mema = [float(2*Ms[i]*Ks[i]*Ns[i] / 1e6) / (float(df1[(df1['algo'] == 'mema outer 5x5') \
+		& (df1['id'] == i)]['time'].values[0]) / 216e6) for i in l]
+	plt.bar(br2, tput_mema, color =colors[4], width = barWidth,
+	        edgecolor ='grey', label ='mema outer 4x2x2')
+	plt.bar(br1, tput_inner_2x8x2, color =colors[1], width = barWidth,
+	        edgecolor ='grey', label = 'cmsis inner 2x4x2')
+	# plt.plot(l, tput_mema, 'b', label = 'mema outer 5x1x5', marker = markers[4], color = colors[4])
+	# plt.plot(l, tput_inner_2x8x2, 'b', label = 'cmsis inner 2x8x2', marker = markers[1], color = colors[1])
+	plt.title('(c) Cortex-M7 FP32 Throughput on TinyML Benchmark', fontsize = 24)
+	plt.legend(loc = "lower right", prop={'size': 16})
+	plt.xlabel('MxKxN Dimensions of Layer', fontsize = 24)
+	plt.ylabel('Throughput (MFLOPs/sec)', fontsize = 24)
+	plt.xticks([r + barWidth for r in range(len(Ms))],
+        ["%dx%dx%d" % (Ms[i],Ks[i],Ns[i]) for i in range(len(Ms))])
+	plt.xticks(rotation=60, fontsize = 24)
+	plt.yticks(range(0,16,5), fontsize = 14)
 	# plt.ylim(ymin = 2e-8,ymax = 0.00012)
 	# plt.ticklabel_format(axis="y", style="sci")
-	plt.savefig("%s_q15.pdf" % fname, bbox_inches='tight')
+	plt.savefig("%s_fp32_M7.pdf" % fname, bbox_inches='tight')
 	plt.show()
 	plt.clf()
 	plt.close('all')
 
 
 plot_arm_vs_mema_tinyml()
+
+
+
+
+
 
 
 def plot_arm_vs_mema_fp32_m_vs_k(fname = 'arm_skew'):
@@ -139,15 +418,15 @@ def plot_arm_vs_mema_fp32_m_vs_k(fname = 'arm_skew'):
   tput_m = [float(2*i*N*K) / float(df1[(df1['algo'] == 'm first') \
     & (df1['M'] == i)]['time'].values[0]) for i in M1]
   fig = plt.figure(figsize = (6,4))
-  plt.title('(a) FP32 Throughput With Large M', fontsize = 14)
+  plt.title('(a) FP32 Throughput With Large M', fontsize = 20)
   plt.plot(M1, tput_m, 'b', label = 'mema m-first', marker = markers[4], color = colors[4])
   plt.plot(M2, tput_inner_2x8x2, 'b', label = 'arm_inner_2x8x2', marker = markers[1], color = colors[1])
   plt.plot(M1, tput_k, 'b', label = 'mema k-first', marker = markers[3], color = colors[3])
-  plt.legend(loc = "lower right", prop={'size': 10})
-  plt.xlabel('M (K = 5, N = 20)', fontsize = 16)
-  plt.ylabel('Throughput (MFLOPs/sec)', fontsize = 14)
+  plt.legend(loc = "lower right", prop={'size': 16})
+  plt.xlabel('M (K = 5, N = 20)', fontsize = 20)
+  plt.ylabel('Throughput (MFLOPs/sec)', fontsize = 20)
   # plt.xticks(range(0,111,20),fontsize = 14)
-  plt.yticks(range(0,33,4),fontsize = 14)
+  plt.yticks(range(0,33,4),fontsize = 20)
   # plt.ylim(ymin = 2e-8,ymax = 0.00012)
   # plt.ticklabel_format(axis="y", style="sci")
   plt.savefig("%s_m.pdf" % fname, bbox_inches='tight')
@@ -169,15 +448,15 @@ def plot_arm_vs_mema_fp32_m_vs_k(fname = 'arm_skew'):
   tput_m = [float(2*M*N*i) / float(df1[(df1['algo'] == 'm first') \
     & (df1['K'] == i)]['time'].values[0]) for i in M1]
   fig = plt.figure(figsize = (6,4))
-  plt.title('(b) FP32 Throughput With Large K', fontsize = 14)
+  plt.title('(b) FP32 Throughput With Large K', fontsize = 20)
   plt.plot(M1, tput_m, 'b', label = 'mema m-first', marker = markers[4], color = colors[4])
   plt.plot(M2, tput_inner_2x8x2, 'b', label = 'arm_inner_2x8x2', marker = markers[1], color = colors[1])
   plt.plot(M1, tput_k, 'b', label = 'mema k-first', marker = markers[3], color = colors[3])
-  plt.legend(loc = "center right", prop={'size': 10})
-  plt.xlabel('K (M = 10, N = 20)', fontsize = 16)
-  plt.ylabel('Throughput (MFLOPs/sec)', fontsize = 14)
+  plt.legend(loc = "lower right", prop={'size': 16})
+  plt.xlabel('K (M = 10, N = 20)', fontsize = 20)
+  plt.ylabel('Throughput (MFLOPs/sec)', fontsize = 20)
   # plt.xticks(range(0,111,20),fontsize = 14)
-  plt.yticks(range(0,33,4), fontsize = 14)
+  plt.yticks(range(0,33,4), fontsize = 20)
   # plt.ylim(ymin = 2e-8,ymax = 0.00012)
   # plt.ticklabel_format(axis="y", style="sci")
   plt.savefig("%s_k.pdf" % fname, bbox_inches='tight')
@@ -187,8 +466,10 @@ def plot_arm_vs_mema_fp32_m_vs_k(fname = 'arm_skew'):
 
 
 
-
 plot_arm_vs_mema_fp32_m_vs_k()
+
+
+
 
 
 def plot_arm_vs_mema_fp32_tput_k(fname = 'arm_vs_mema_fp32_tput_k3'):
@@ -308,6 +589,18 @@ plot_arm_vs_mema_fp32_sparse()
 
 
 
+
+
+
+
+
+
+
+
+
+
+#--------------------------------- Old PLots-------------------------------
+
 def plot_arm_vs_mema_fp32_tput(fname = 'arm_vs_mema_fp32_tput'):
 	plt.rcParams.update({'font.size': 16})
 	markers = ['o','v','s','d','^']
@@ -370,29 +663,6 @@ def plot_arm_vs_mema_q15_tput(fname = 'arm_vs_mema_q15_tput'):
 	plt.close('all')
 
 
-
-# integrate power over time (200 us interval) to get energy (mJ) during MM 
-def compute_energy_peaks(fname, high, low):
-	df1 = pandas.read_csv(fname)
-	c = list(df1['USB Avg Current (mA)'])
-	p = list(df1['USB Avg Power (W)'])
-	i = 0;
-	energy = []
-	while i < len(p):
-		if c[i] >= high:
-			x = 0
-			j = 0
-			while c[i+j] >= low:
-				# energy (J) = sum(power (W) X time (sec)) (0.0002 sec per sample)
-				x += p[i+j]*0.0002
-				j += 1
-			#
-			energy.append(x * 1000.0)
-			i += j
-		else:
-			i += 1
-	#
-	return energy
 
 
 
