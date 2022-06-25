@@ -308,9 +308,9 @@ def plot_arm_vs_mema_tinyml(fname = 'plot_arm_vs_mema_tinyml'):
 	tput_mema = [float(2*Ms[i]*Ks[i]*Ns[i] / 1e6) / (float(df1[(df1['algo'] == 'mema outer 5x5') \
 		& (df1['id'] == i)]['time'].values[0]) / 1e6) for i in l]
 	plt.bar(br2, tput_mema, color =colors[4], width = barWidth,
-	        edgecolor ='grey', label ='mema outer 4x2x2')
+	        edgecolor ='grey', label ='mema outer 5x1x5')
 	plt.bar(br1, tput_inner_2x8x2, color =colors[1], width = barWidth,
-	        edgecolor ='grey', label = 'cmsis inner 2x4x2')
+	        edgecolor ='grey', label = 'cmsis inner 2x8x2')
 	# plt.plot(l, tput_mema, 'b', label = 'mema outer 5x1x5', marker = markers[4], color = colors[4])
 	# plt.plot(l, tput_inner_2x8x2, 'b', label = 'cmsis inner 2x8x2', marker = markers[1], color = colors[1])
 	plt.title('(a) Cortex-M4 FP32 Throughput on TinyML Benchmark', fontsize = 24)
@@ -373,9 +373,9 @@ def plot_arm_vs_mema_tinyml(fname = 'plot_arm_vs_mema_tinyml'):
 	tput_mema = [float(2*Ms[i]*Ks[i]*Ns[i] / 1e6) / (float(df1[(df1['algo'] == 'mema outer 5x5') \
 		& (df1['id'] == i)]['time'].values[0]) / 216e6) for i in l]
 	plt.bar(br2, tput_mema, color =colors[4], width = barWidth,
-	        edgecolor ='grey', label ='mema outer 4x2x2')
+	        edgecolor ='grey', label ='mema outer 5x1x5')
 	plt.bar(br1, tput_inner_2x8x2, color =colors[1], width = barWidth,
-	        edgecolor ='grey', label = 'cmsis inner 2x4x2')
+	        edgecolor ='grey', label = 'cmsis inner 2x8x2')
 	# plt.plot(l, tput_mema, 'b', label = 'mema outer 5x1x5', marker = markers[4], color = colors[4])
 	# plt.plot(l, tput_inner_2x8x2, 'b', label = 'cmsis inner 2x8x2', marker = markers[1], color = colors[1])
 	plt.title('(c) Cortex-M7 FP32 Throughput on TinyML Benchmark', fontsize = 24)
