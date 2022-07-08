@@ -2286,7 +2286,7 @@ arm_status outer_fp32_5x5_test(
 
 
 
-
+// outer product kernels with naive row-skipping on unpacked A matrix (row major)
 arm_status outer_fp32_5x5_sp_test(
   const arm_matrix_instance_f32 * pSrcA,
   const arm_matrix_instance_f32 * pSrcB,
@@ -2480,6 +2480,77 @@ arm_status outer_fp32_5x5_sp_test(
 
 
 
+
+
+
+// packing without density-based reordering of columns
+void pack_A_sp_no_reorder(float* A, float* A_p, sp_pack_t* sp_pack, 
+  int M, int K, int k_c, int m_r) {
+
+  int nnz_col, ind_blk, outer_ind = 0, a_ind = 0;
+  float a_tmp = 0;
+
+
+  int* nnz_outer = (int*) calloc(((M*K) / m_r) , sizeof(int)); // storing number of nonzeros 
+                                                        // in each outer prod col of A
+
+  int* k_inds = (int*) calloc(((M*K) / m_r) , sizeof(int)); // storing kc_ind 
+                                                        // of each outer prod col of A
+
+  int* loc_m = (int*) calloc(M*K , sizeof(int)); // array for storing M dim C writeback location for each nnz in A
+                                // each value ranges from 0 to mr-1
+
+  int* nnz_outer_blk = (int*) calloc((M / m_r) , sizeof(int)); // storing number of nnz vals
+                                                    // in each outer prod block of A
+
+  int* k_cnt = (int*) calloc((M / m_r) , sizeof(int)); // storing number of nnz cols (b/w 0 and k_c) 
+                                                    // in each outer prod block of A
+
+
+
+
+  for(int m3 = 0; m3 < M; m3 += m_r) {
+
+     ind_blk = 0;
+
+     for(int i = 0; i < k_c; i++) {
+
+        nnz_col = 0;
+
+        for(int j = 0; j < m_r; j++) {
+
+          a_tmp = A[m3*K + i + j*K];
+          if(a_tmp != 0) {
+             A_p[a_ind + ind_blk] = a_tmp;
+             loc_m[a_ind + ind_blk++] = j;
+             nnz_col++;
+          }
+        }
+
+        if(nnz_col) {
+          k_inds[outer_ind] = i;
+          nnz_outer[outer_ind++] = nnz_col;
+          k_cnt[m3 / m_r]++;
+        }
+     }
+
+     // a_ind += m_r*k_c;
+     // outer_ind += cnt_inds[0]; // skip ahead over cols with 0 nonzeros
+     a_ind += ind_blk;
+     nnz_outer_blk[m3 / m_r] = ind_blk;
+  }
+
+
+  sp_pack->A_sp_p = A_p;
+  sp_pack->loc_m = loc_m;
+  sp_pack->nnz_outer = nnz_outer;
+  sp_pack->k_inds = k_inds;
+  sp_pack->nnz_outer_blk = nnz_outer_blk;
+  sp_pack->k_cnt = k_cnt;
+}
+
+
+// rosko packing with density-based-reordering of columns
 void pack_A_sp(float* A, float* A_p, sp_pack_t* sp_pack, 
   int M, int K, int k_c, int m_r) {
 
@@ -2747,7 +2818,6 @@ arm_status outer_fp32_5x5_sp(
   /* Return to application */
   return (status);
 }
-
 
 
 

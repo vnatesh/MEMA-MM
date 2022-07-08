@@ -520,25 +520,27 @@ def plot_mema_fp32_sparse_levels(fname = 'mema_fp32_sparse_levels'):
 	colors = ['b','g','aqua','k','m','r']
 	df1 = pandas.read_csv('m4_sparsity')
 	N1 = range(50,100,5)
-	runtime_mema = [float(df1[(df1['algo'] == 'mema') \
-		& (df1['sparsity'] == i)]['time'].values[0] / (1e6)) for i in N1]
-	runtime_mema_sp = [float(df1[(df1['algo'] == 'mema_sp') \
-		& (df1['sparsity'] == i)]['time'].values[0] / (1e6)) for i in N1]
+	inner_2x8x2 = [((80.0**3) / (48618.0 / 1e6)) / 1e6 for i in N1]
+	# runtime_mema_sp = [float(df1[(df1['algo'] == 'mema_sp') \
+	# 	& (df1['sparsity'] == i)]['time'].values[0] / (1e6)) for i in N1]
 	runtime_mema_sp_packed = [float(df1[(df1['algo'] == 'mema_sp_packed') \
 		& (df1['sparsity'] == i)]['time'].values[0] / (1e6)) for i in N1]
+	runtime_mema_sp_packed_reorder = [float(df1[(df1['algo'] == 'mema_sp_packed_reorder') \
+		& (df1['sparsity'] == i)]['time'].values[0] / (1e6)) for i in N1]
 	fig = plt.figure(figsize = (6,4))
-	plt.title('(b) FP32 Runtime of spMM for Different Sparsities', fontsize = 14)
-	plt.plot(N1, runtime_mema, 'b', label = 'mema_outer_5x5', marker = markers[4], color = colors[4])
-	plt.plot(N1, runtime_mema_sp, 'b', label = 'mema_poly', marker = markers[4], color = colors[5])
-	plt.plot(N1, runtime_mema_sp_packed, 'b', label = 'mema_rosko', marker = markers[4], color = colors[0])
+	plt.title('(c) FP32 Throughput on ARM MCU', fontsize = 20)
+	plt.plot(N1, inner_2x8x2, 'b', label = 'CMSIS dense MM', marker = markers[4], color = colors[4])
+	# plt.plot(N1, runtime_mema_sp, 'b', label = 'TUMMY', marker = markers[4], color = colors[5])
+	plt.plot(N1, runtime_mema_sp_packed, 'b', label = 'TUMMY+packing', marker = markers[4], color = colors[0])
+	plt.plot(N1, runtime_mema_sp_packed_reorder, 'b', label = 'TUMMY+packing_reordering', marker = markers[4], color = colors[-1])
 	plt.legend(loc = "lower left", prop={'size': 10})
 	plt.xlabel('sparsity (%)', fontsize = 16)
-	plt.ylabel('Runtime (sec)', fontsize = 14)
+	plt.ylabel('Throughput (MFLOPs/sec)', fontsize = 14)
 	# plt.xticks(range(0,86,20),fontsize = 14)
 	plt.yticks(fontsize = 14)
 	# plt.ylim(ymin = 2e-8,ymax = 0.00012)
 	# plt.ticklabel_format(axis="y", style="sci")
-	plt.savefig("%s.pdf" % fname, bbox_inches='tight')
+	# plt.savefig("%s.pdf" % fname, bbox_inches='tight')
 	plt.show()
 	plt.clf()
 	plt.close('all')

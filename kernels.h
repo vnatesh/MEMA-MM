@@ -35,7 +35,13 @@ typedef struct sp_pack_t {
 } sp_pack_t;
 
 
-void pack_A_sp(float* A, float* A_p, sp_pack_t* sp_pack, int M, int K, int k_c, int m_r);
+void pack_A_sp(float* A, float* A_p, sp_pack_t* sp_pack, 
+  int M, int K, int k_c, int m_r);
+
+// packing without density-based reordering of columns
+void pack_A_sp_no_reorder(float* A, float* A_p, sp_pack_t* sp_pack, 
+  int M, int K, int k_c, int m_r) ;
+
 
 void rand_sparse(float* mat, int r, int c, float sparsity);
 void print_mat1(float* mat, int rows, int cols);

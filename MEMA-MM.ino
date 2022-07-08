@@ -1053,7 +1053,7 @@ void test() {
 
   unsigned long start1, end1, diff;
   float *A_f32, *B_f32, *C_f32, *C_f32_ref, *A_f32_p;
-  uint32_t M = 85, N = 85, K = 85;
+  uint32_t M = 80, N = 80, K = 80;
 
   A_f32 = (float *) malloc( M*K*sizeof( float ));
   B_f32 = (float *) malloc( K*N*sizeof( float ));
@@ -1091,25 +1091,42 @@ void test() {
   Serial.println(diff); //prints time since program started
 
 
+  // sp_pack_t* sp_pack = (sp_pack_t*) malloc(sizeof(sp_pack_t));
+  // A_f32_p = (float *) calloc( M*K, sizeof( float ));
+  // pack_A_sp(A_f32, A_f32_p, sp_pack, M, K, K, 5);
+
+  // // Serial.print("packed A "); 
+  // // print_arr(sp_pack->A_sp_p, M*K);
+  // // Serial.print("nnz_outer "); 
+  // // print_arr_int(sp_pack->nnz_outer, (M*K) / 5);
+  // // Serial.print("k_inds "); 
+  // // print_arr_int(sp_pack->k_inds, (M*K) / 5);
+  // // Serial.print("loc_m "); 
+  // // print_arr_int(sp_pack->loc_m, (M*K));
+  // // Serial.print("nnz_outer_blk "); 
+  // // print_arr_int(sp_pack->nnz_outer_blk, M / 5);
+  // // Serial.print("k_cnt "); 
+  // // print_arr_int(sp_pack->k_cnt, M / 5);
+
+  // C_f32 = (float *) calloc( M*N, sizeof( float ));
+  // arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
+
+  // start1 = micros();
+
+  // status = outer_fp32_5x5_sp(sp_pack, &B, &C, M, K, N);
+
+  // end1 = micros();
+  // diff = end1 - start1;
+  // Serial.print("sparse sgemm outer_fp32_5x5_sp time: "); 
+  // Serial.println(diff); //prints time since program started
+
+  // f32_gemm_checker(C.pData, C_ref.pData, N, M, K);
+  // // print_mat(&C, M, N);
+
+
   sp_pack_t* sp_pack = (sp_pack_t*) malloc(sizeof(sp_pack_t));
   A_f32_p = (float *) calloc( M*K, sizeof( float ));
-  pack_A_sp(A_f32, A_f32_p, sp_pack, M, K, K, 5);
-
-  // Serial.print("packed A "); 
-  // print_arr(sp_pack->A_sp_p, M*K);
-  // Serial.print("nnz_outer "); 
-  // print_arr_int(sp_pack->nnz_outer, (M*K) / 5);
-  // Serial.print("k_inds "); 
-  // print_arr_int(sp_pack->k_inds, (M*K) / 5);
-  // Serial.print("loc_m "); 
-  // print_arr_int(sp_pack->loc_m, (M*K));
-  // Serial.print("nnz_outer_blk "); 
-  // print_arr_int(sp_pack->nnz_outer_blk, M / 5);
-  // Serial.print("k_cnt "); 
-  // print_arr_int(sp_pack->k_cnt, M / 5);
-
-
-
+  pack_A_sp_no_reorder(A_f32, A_f32_p, sp_pack, M, K, K, 5);
 
   C_f32 = (float *) calloc( M*N, sizeof( float ));
   arm_mat_init_f32(&C, M, N, (float32_t *) C_f32);
@@ -1120,13 +1137,20 @@ void test() {
 
   end1 = micros();
   diff = end1 - start1;
-  Serial.print("sparse sgemm outer_fp32_5x5_sp time: "); 
+  Serial.print("sparse sgemm outer_fp32_5x5_sp_no_reorder time: "); 
   Serial.println(diff); //prints time since program started
 
   f32_gemm_checker(C.pData, C_ref.pData, N, M, K);
-  // print_mat(&C, M, N);
 
 
+  free(sp_pack->A_sp_p);
+  free(sp_pack->loc_m);
+  free(sp_pack->nnz_outer);
+  // free(sp_pack->k_inds);
+  free(sp_pack->nnz_outer_blk);
+  // free(sp_pack->k_cnt);
+  free(sp_pack);
+  // free(A_f32_p);
 
 
   free(C_f32);
@@ -1198,13 +1222,6 @@ void test() {
   free(B_f32);
   free(C_f32);
   free(C_f32_ref);
-  free(sp_pack->A_sp_p);
-  free(sp_pack->loc_m);
-  free(sp_pack->nnz_outer);
-  free(sp_pack->k_inds);
-  free(sp_pack->nnz_outer_blk);
-  free(sp_pack->k_cnt);
-  free(sp_pack);
 
 }
 
@@ -1390,8 +1407,43 @@ void arm_vs_mema_fp32_sp() {
     status = outer_fp32_5x5_sp(sp_pack, &B, &C, i, i, i);
     end1 = micros();
     diff = end1 - start1;
+    sprintf(buf, "%d,mema_sp_packed_reorder,%lu", j, diff);
+    Serial.println(buf); //prints time since program started
+
+
+
+
+    free(sp_pack->A_sp_p);
+    free(sp_pack->loc_m);
+    free(sp_pack->nnz_outer);
+    free(sp_pack->k_inds);
+    free(sp_pack->nnz_outer_blk);
+    free(sp_pack->k_cnt);
+    free(sp_pack);
+    free(C_f32);
+    C_f32 = (float *) calloc( i*i, sizeof( float ));
+    arm_mat_init_f32(&C, i, i, (float32_t *) C_f32);
+
+    sp_pack = (sp_pack_t*) malloc(sizeof(sp_pack_t));
+    A_f32_p = (float *) calloc( i*i, sizeof( float ));
+    pack_A_sp_no_reorder(A_f32, A_f32_p, sp_pack, i, i, i, 5);
+    
+    start1 = micros();
+    status = outer_fp32_5x5_sp(sp_pack, &B, &C, i, i, i);
+    end1 = micros();
+    diff = end1 - start1;
     sprintf(buf, "%d,mema_sp_packed,%lu", j, diff);
     Serial.println(buf); //prints time since program started
+
+
+    free(sp_pack->A_sp_p);
+    free(sp_pack->loc_m);
+    free(sp_pack->nnz_outer);
+    free(sp_pack->k_inds);
+    free(sp_pack->nnz_outer_blk);
+    free(sp_pack->k_cnt);
+    free(sp_pack);
+
 
 
     free(C_f32);
@@ -1409,13 +1461,6 @@ void arm_vs_mema_fp32_sp() {
     free(A_f32);
     free(B_f32);
     free(C_f32);
-    free(sp_pack->A_sp_p);
-    free(sp_pack->loc_m);
-    free(sp_pack->nnz_outer);
-    free(sp_pack->k_inds);
-    free(sp_pack->nnz_outer_blk);
-    free(sp_pack->k_cnt);
-    free(sp_pack);
   }
 
 
@@ -2656,7 +2701,7 @@ void loop() {
  // put your main code here, to run repeatedly:
   // print_memory_info();
 
-  delay(10000); 
+  // delay(10000); 
 
  // print_memory_info1();
   // testing_q31();
@@ -2669,12 +2714,12 @@ void loop() {
   delay(10000); 
   // power_inner_q15();   
 //  power_outer_q15();  
-//  test();
-   // arm_vs_mema_fp32_sp();
+ // test();
+   arm_vs_mema_fp32_sp();
   // arm_vs_mema_fp32_k();
 
   // arm_vs_mema_fp32_mk();
-tiny_ml_benchmark();
+// tiny_ml_benchmark();
 // tiny_ml_benchmark_q15();
   
   // testing();
